@@ -10,9 +10,15 @@ import {
 import { linkGroup } from '@/fields/linkGroup'
 
 export const hero: Field = {
-  name: 'hero',
-  type: 'group',
+  name: 'heroSection', // Or 'pageHero', 'heroContent', etc.
+  label: 'Hero Section',
+  type: 'group', // Assuming it's a group of fields
   fields: [
+    {
+      name: 'title', // This is fine, it will be heroSection.title
+      label: 'Hero Heading',
+      type: 'text',
+    },
     {
       name: 'type',
       type: 'select',
@@ -68,5 +74,4 @@ export const hero: Field = {
       required: true,
     },
   ],
-  label: false,
 }

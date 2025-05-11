@@ -39,10 +39,4 @@ const CardContent: React.FC<
   <div className={cn('p-6 pt-0', className)} ref={ref} {...props} />
 )
 
-const CardFooter: React.FC<
-  { ref?: React.Ref<HTMLDivElement> } & React.HTMLAttributes<HTMLDivElement>
-> = ({ className, ref, ...props }) => (
-  <div className={cn('flex items-center p-6 pt-0', className)} ref={ref} {...props} />
-)
-
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
+export { Card, CardContent, CardDescription, CardHeader, CardTitle }

@@ -59,7 +59,7 @@ export const Pages: CollectionConfig<'pages'> = {
   },
   fields: [
     {
-      name: 'title',
+      name: 'title', // This is the main title field for the page
       type: 'text',
       required: true,
     },
@@ -67,7 +67,7 @@ export const Pages: CollectionConfig<'pages'> = {
       type: 'tabs',
       tabs: [
         {
-          fields: [hero],
+          fields: [hero], // The 'hero' field is used here
           label: 'Hero',
         },
         {

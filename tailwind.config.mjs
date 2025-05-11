@@ -56,11 +56,15 @@ const config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       colors: {
+        text: 'oklch(23.76% 0.004 345.53)',
+        background: 'oklch(97.52% 0.017 67.63)',
+        softer: 'oklch(95.3% 0.0357 71.4deg)',
+        primary: 'oklch(63.93% 0.072 139.71)',
+        secondary: 'oklch(79.43% 0.071 75.07)',
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: 'oklch(35.99% 0.047 65.43)',
+          foreground: 'hsl(var(--accent-foreground))', // You might want to define a contrasting foreground for accent
         },
-        background: 'hsl(var(--background))',
         border: 'hsla(var(--border))',
         card: {
           DEFAULT: 'hsl(var(--card))',
@@ -80,22 +84,17 @@ const config = {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
         ring: 'hsl(var(--ring))',
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        success: 'hsl(var(--success))',
-        error: 'hsl(var(--error))',
-        warning: 'hsl(var(--warning))',
+        // Remove or comment out the old success, error, warning if you want to use the new palette exclusively
+        // success: 'hsl(var(--success))',
+        // error: 'hsl(var(--error))',
+        // warning: 'hsl(var(--warning))',
       },
       fontFamily: {
         mono: ['var(--font-geist-mono)'],
-        sans: ['var(--font-geist-sans)'],
+        sans: ['var(--font-figtree)', 'var(--font-geist-sans)'], // Add Figtree, GeistSans as fallback
+        // Or, if you want Figtree to be the primary sans font:
+        // sans: ['var(--font-figtree)'],
       },
       keyframes: {
         'accordion-down': {

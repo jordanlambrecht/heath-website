@@ -14,33 +14,28 @@
   }
 
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --softer: '#FFECD6';
+    --background: 97.52% 0.017 67.63; /* oklch(97.52% 0.017 67.63) */
+    --foreground: 23.76% 0.004 345.53; /* oklch(23.76% 0.004 345.53) */
 
-    --card: 240 5% 96%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* You'll need to decide how to map the new palette to existing CSS variables like --card, --popover etc. */
+    /* Or, update your components to use the new Tailwind class names directly e.g., bg-background, text-text */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 63.93% 0.072 139.71; /* oklch(63.93% 0.072 139.71) */
+    /* --primary-foreground: 210 40% 98%; */ /* Decide on a primary-foreground */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --secondary: 79.43% 0.071 75.07; /* oklch(79.43% 0.071 75.07) */
+    /* --secondary-foreground: 222.2 47.4% 11.2%; */ /* Decide on a secondary-foreground */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 35.99% 0.047 65.43; /* oklch(35.99% 0.047 65.43) */
+    /* --accent-foreground: 222.2 47.4% 11.2%; */ /* Decide on an accent-foreground */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 6% 80%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 240 6% 80%; /* Example: keep or update */
+    --input: 214.3 31.8% 91.4%; /* Example: keep or update */
+    --ring: 222.2 84% 4.9%; /* Example: keep or update */
 
     --radius: 0.2rem;
 
@@ -50,8 +45,9 @@
   }
 
   [data-theme='dark'] {
-    --background: 0 0% 0%;
-    --foreground: 210 40% 98%;
+    /* Define dark theme equivalents for your new palette */
+    --background: 23.76% 0.004 345.53; /* Example: Using text color as dark background */
+    --foreground: 97.52% 0.017 67.63; /* Example: Using background color as dark text */
 
     --card: 0 0% 4%;
     --card-foreground: 210 40% 98%;
