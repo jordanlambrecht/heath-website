@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-background text-text flex flex-col min-h-screen">
         <Providers>
           <SiteHeader /> {/* Use the new SiteHeader here */}
-          <main className="flex-grow pt-8 pb-16">{children}</main>{' '}
+          <main className="grow pt-8 pb-16">{children}</main>{' '}
           {/* Added some padding to main */}
           <NewFooter />
         </Providers>
