@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
 import { ArrowRight } from 'lucide-react' // For the hover arrow
 
 import type { Page as PageType, Poem as PoemType } from '@/payload-types'
@@ -84,7 +83,7 @@ export default async function HomePage() {
       {poems && poems.length > 0 && (
         <section className="py-12 md:py-16">
           <h2 className="text-2xl md:text-3xl font-semibold text-primary mb-8 md:mb-12 text-center">
-            Explore the Poems
+            Poetry
           </h2>
           <div className="border-l-2 border-foreground/30">
             {' '}

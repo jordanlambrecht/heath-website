@@ -42,11 +42,7 @@ export const Poems: CollectionConfig = {
       required: true,
       localized: true,
     },
-    {
-      name: 'author', // Assuming a simple text field for now, could be a relationship to Users
-      type: 'text',
-      defaultValue: 'Heath Johnston',
-    },
+
     {
       name: 'publishedDate',
       type: 'date',

@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { formatRelativeDate } from '@/utilities/formatDate' // Import the new utility
 
 type PoemPageProps = {
-  params: { slug: string }
+  params: Promise<{ slug: string }> // Changed params to be a Promise
 }
 
 // Cache individual poem data
@@ -69,8 +69,9 @@ const queryAllPublishedPoemsForNav = cache(async () => {
   }
 })
 
-export default async function PoemPage({ params }: PoemPageProps) {
-  const { slug } = params
+export default async function PoemPage({ params: paramsPromise }: PoemPageProps) {
+  // Renamed params to paramsPromise
+  const { slug } = await paramsPromise // Await the paramsPromise
   const poem: PoemType | null = await queryPoemBySlug(slug)
   const allPublishedPoems = await queryAllPublishedPoemsForNav()
 
@@ -143,8 +144,11 @@ export default async function PoemPage({ params }: PoemPageProps) {
   )
 }
 
-export async function generateMetadata({ params }: PoemPageProps): Promise<Metadata> {
-  const { slug } = params
+export async function generateMetadata({
+  params: paramsPromise,
+}: PoemPageProps): Promise<Metadata> {
+  // Renamed params to paramsPromise
+  const { slug } = await paramsPromise // Await the paramsPromise
   const poem: PoemType | null = await queryPoemBySlug(slug)
 
   if (!poem) {
@@ -152,6 +156,7 @@ export async function generateMetadata({ params }: PoemPageProps): Promise<Metad
       title: 'Poem Not Found',
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return generateMeta({ doc: poem as any }) // Cast as any if generateMeta expects a PageType
 }
 

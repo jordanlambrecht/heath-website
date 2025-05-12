@@ -9,7 +9,6 @@ import React from 'react'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
-import { draftMode } from 'next/headers'
 import { SiteHeader } from '@/components/SiteHeader' // Import the new SiteHeader
 import { NewFooter } from '@/components/Footer' // Import NewFooter
 
@@ -22,8 +21,6 @@ const figtree = Figtree({
 })
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { isEnabled } = await draftMode()
-
   return (
     <html
       className={cn(GeistSans.variable, GeistMono.variable, figtree.variable)} // Add figtree variable
@@ -38,8 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-background text-text flex flex-col min-h-screen">
         <Providers>
           <SiteHeader /> {/* Use the new SiteHeader here */}
-          <main className="grow pt-8 pb-16">{children}</main>{' '}
-          {/* Added some padding to main */}
+          <main className="grow pt-8 pb-16">{children}</main> {/* Added some padding to main */}
           <NewFooter />
         </Providers>
       </body>

@@ -2,8 +2,6 @@ import React, { cache } from 'react'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
-import type { Poem } from '@/payload-types' // Assuming 'Poem' is the generated type for your poems collection
-import { notFound } from 'next/navigation'
 import { PoemContentAnimator } from './PoemContentAnimator' // Import the animator
 
 // Cache the list of poems

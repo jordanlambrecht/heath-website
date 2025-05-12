@@ -43,7 +43,6 @@ export default async function AboutPage() {
   return (
     <article className="pt-16 pb-24 bg-background text-text">
       <div className="container">
-        {/* You might want a specific hero or title treatment for the About page here */}
         {/* For example: */}
         {/* <h1 className="text-4xl font-bold text-primary mb-8">{page.title}</h1> */}
       </div>

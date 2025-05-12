@@ -13,32 +13,16 @@ import {
   foreignKey,
   integer,
   varchar,
+  jsonb,
   boolean,
   text,
-  jsonb,
-  numeric,
   serial,
   timestamp,
+  numeric,
   type AnyPgColumn,
   pgEnum,
 } from '@payloadcms/db-postgres/drizzle/pg-core'
 import { sql, relations } from '@payloadcms/db-postgres/drizzle'
-export const enum_pages_hero_section_links_link_type = pgEnum(
-  'enum_pages_hero_section_links_link_type',
-  ['reference', 'custom'],
-)
-export const enum_pages_hero_section_links_link_appearance = pgEnum(
-  'enum_pages_hero_section_links_link_appearance',
-  ['default', 'outline'],
-)
-export const enum_pages_blocks_cta_links_link_type = pgEnum(
-  'enum_pages_blocks_cta_links_link_type',
-  ['reference', 'custom'],
-)
-export const enum_pages_blocks_cta_links_link_appearance = pgEnum(
-  'enum_pages_blocks_cta_links_link_appearance',
-  ['default', 'outline'],
-)
 export const enum_pages_blocks_content_columns_size = pgEnum(
   'enum_pages_blocks_content_columns_size',
   ['oneThird', 'half', 'twoThirds', 'full'],
@@ -51,37 +35,7 @@ export const enum_pages_blocks_content_columns_link_appearance = pgEnum(
   'enum_pages_blocks_content_columns_link_appearance',
   ['default', 'outline'],
 )
-export const enum_pages_blocks_archive_populate_by = pgEnum(
-  'enum_pages_blocks_archive_populate_by',
-  ['collection', 'selection'],
-)
-export const enum_pages_blocks_archive_relation_to = pgEnum(
-  'enum_pages_blocks_archive_relation_to',
-  ['posts'],
-)
-export const enum_pages_hero_section_type = pgEnum('enum_pages_hero_section_type', [
-  'none',
-  'highImpact',
-  'mediumImpact',
-  'lowImpact',
-])
 export const enum_pages_status = pgEnum('enum_pages_status', ['draft', 'published'])
-export const enum__pages_v_version_hero_section_links_link_type = pgEnum(
-  'enum__pages_v_version_hero_section_links_link_type',
-  ['reference', 'custom'],
-)
-export const enum__pages_v_version_hero_section_links_link_appearance = pgEnum(
-  'enum__pages_v_version_hero_section_links_link_appearance',
-  ['default', 'outline'],
-)
-export const enum__pages_v_blocks_cta_links_link_type = pgEnum(
-  'enum__pages_v_blocks_cta_links_link_type',
-  ['reference', 'custom'],
-)
-export const enum__pages_v_blocks_cta_links_link_appearance = pgEnum(
-  'enum__pages_v_blocks_cta_links_link_appearance',
-  ['default', 'outline'],
-)
 export const enum__pages_v_blocks_content_columns_size = pgEnum(
   'enum__pages_v_blocks_content_columns_size',
   ['oneThird', 'half', 'twoThirds', 'full'],
@@ -93,18 +47,6 @@ export const enum__pages_v_blocks_content_columns_link_type = pgEnum(
 export const enum__pages_v_blocks_content_columns_link_appearance = pgEnum(
   'enum__pages_v_blocks_content_columns_link_appearance',
   ['default', 'outline'],
-)
-export const enum__pages_v_blocks_archive_populate_by = pgEnum(
-  'enum__pages_v_blocks_archive_populate_by',
-  ['collection', 'selection'],
-)
-export const enum__pages_v_blocks_archive_relation_to = pgEnum(
-  'enum__pages_v_blocks_archive_relation_to',
-  ['posts'],
-)
-export const enum__pages_v_version_hero_section_type = pgEnum(
-  'enum__pages_v_version_hero_section_type',
-  ['none', 'highImpact', 'mediumImpact', 'lowImpact'],
 )
 export const enum__pages_v_version_status = pgEnum('enum__pages_v_version_status', [
   'draft',
@@ -120,11 +62,6 @@ export const enum__poems_v_version_status = pgEnum('enum__poems_v_version_status
   'draft',
   'published',
 ])
-export const enum_redirects_to_type = pgEnum('enum_redirects_to_type', ['reference', 'custom'])
-export const enum_forms_confirmation_type = pgEnum('enum_forms_confirmation_type', [
-  'message',
-  'redirect',
-])
 export const enum_payload_jobs_log_task_slug = pgEnum('enum_payload_jobs_log_task_slug', [
   'inline',
   'schedulePublish',
@@ -137,76 +74,6 @@ export const enum_payload_jobs_task_slug = pgEnum('enum_payload_jobs_task_slug',
   'inline',
   'schedulePublish',
 ])
-
-export const pages_hero_section_links = pgTable(
-  'pages_hero_section_links',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    id: varchar('id').primaryKey(),
-    link_type: enum_pages_hero_section_links_link_type('link_type').default('reference'),
-    link_newTab: boolean('link_new_tab'),
-    link_url: varchar('link_url'),
-    link_label: varchar('link_label'),
-    link_appearance:
-      enum_pages_hero_section_links_link_appearance('link_appearance').default('default'),
-  },
-  (columns) => ({
-    _orderIdx: index('pages_hero_section_links_order_idx').on(columns._order),
-    _parentIDIdx: index('pages_hero_section_links_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [pages.id],
-      name: 'pages_hero_section_links_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const pages_blocks_cta_links = pgTable(
-  'pages_blocks_cta_links',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: varchar('_parent_id').notNull(),
-    id: varchar('id').primaryKey(),
-    link_type: enum_pages_blocks_cta_links_link_type('link_type').default('reference'),
-    link_newTab: boolean('link_new_tab'),
-    link_url: varchar('link_url'),
-    link_label: varchar('link_label'),
-    link_appearance:
-      enum_pages_blocks_cta_links_link_appearance('link_appearance').default('default'),
-  },
-  (columns) => ({
-    _orderIdx: index('pages_blocks_cta_links_order_idx').on(columns._order),
-    _parentIDIdx: index('pages_blocks_cta_links_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [pages_blocks_cta.id],
-      name: 'pages_blocks_cta_links_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const pages_blocks_cta = pgTable(
-  'pages_blocks_cta',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    richText: jsonb('rich_text'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('pages_blocks_cta_order_idx').on(columns._order),
-    _parentIDIdx: index('pages_blocks_cta_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('pages_blocks_cta_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [pages.id],
-      name: 'pages_blocks_cta_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
 
 export const pages_blocks_content_columns = pgTable(
   'pages_blocks_content_columns',
@@ -283,69 +150,11 @@ export const pages_blocks_media_block = pgTable(
   }),
 )
 
-export const pages_blocks_archive = pgTable(
-  'pages_blocks_archive',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    introContent: jsonb('intro_content'),
-    populateBy: enum_pages_blocks_archive_populate_by('populate_by').default('collection'),
-    relationTo: enum_pages_blocks_archive_relation_to('relation_to').default('posts'),
-    limit: numeric('limit').default('10'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('pages_blocks_archive_order_idx').on(columns._order),
-    _parentIDIdx: index('pages_blocks_archive_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('pages_blocks_archive_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [pages.id],
-      name: 'pages_blocks_archive_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const pages_blocks_form_block = pgTable(
-  'pages_blocks_form_block',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    form: integer('form_id').references(() => forms.id, {
-      onDelete: 'set null',
-    }),
-    enableIntro: boolean('enable_intro'),
-    introContent: jsonb('intro_content'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('pages_blocks_form_block_order_idx').on(columns._order),
-    _parentIDIdx: index('pages_blocks_form_block_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('pages_blocks_form_block_path_idx').on(columns._path),
-    pages_blocks_form_block_form_idx: index('pages_blocks_form_block_form_idx').on(columns.form),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [pages.id],
-      name: 'pages_blocks_form_block_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
 export const pages = pgTable(
   'pages',
   {
     id: serial('id').primaryKey(),
     title: varchar('title'),
-    heroSection_title: varchar('hero_section_title'),
-    heroSection_type: enum_pages_hero_section_type('hero_section_type').default('lowImpact'),
-    heroSection_richText: jsonb('hero_section_rich_text'),
-    heroSection_media: integer('hero_section_media_id').references(() => media.id, {
-      onDelete: 'set null',
-    }),
     meta_title: varchar('meta_title'),
     meta_image: integer('meta_image_id').references(() => media.id, {
       onDelete: 'set null',
@@ -363,9 +172,6 @@ export const pages = pgTable(
     _status: enum_pages_status('_status').default('draft'),
   },
   (columns) => ({
-    pages_hero_section_hero_section_media_idx: index(
-      'pages_hero_section_hero_section_media_idx',
-    ).on(columns.heroSection_media),
     pages_meta_meta_image_idx: index('pages_meta_meta_image_idx').on(columns.meta_image),
     pages_slug_idx: index('pages_slug_idx').on(columns.slug),
     pages_updated_at_idx: index('pages_updated_at_idx').on(columns.updatedAt),
@@ -383,7 +189,6 @@ export const pages_rels = pgTable(
     path: varchar('path').notNull(),
     pagesID: integer('pages_id'),
     postsID: integer('posts_id'),
-    categoriesID: integer('categories_id'),
   },
   (columns) => ({
     order: index('pages_rels_order_idx').on(columns.order),
@@ -391,7 +196,6 @@ export const pages_rels = pgTable(
     pathIdx: index('pages_rels_path_idx').on(columns.path),
     pages_rels_pages_id_idx: index('pages_rels_pages_id_idx').on(columns.pagesID),
     pages_rels_posts_id_idx: index('pages_rels_posts_id_idx').on(columns.postsID),
-    pages_rels_categories_id_idx: index('pages_rels_categories_id_idx').on(columns.categoriesID),
     parentFk: foreignKey({
       columns: [columns['parent']],
       foreignColumns: [pages.id],
@@ -406,86 +210,6 @@ export const pages_rels = pgTable(
       columns: [columns['postsID']],
       foreignColumns: [posts.id],
       name: 'pages_rels_posts_fk',
-    }).onDelete('cascade'),
-    categoriesIdFk: foreignKey({
-      columns: [columns['categoriesID']],
-      foreignColumns: [categories.id],
-      name: 'pages_rels_categories_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const _pages_v_version_hero_section_links = pgTable(
-  '_pages_v_version_hero_section_links',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    id: serial('id').primaryKey(),
-    link_type: enum__pages_v_version_hero_section_links_link_type('link_type').default('reference'),
-    link_newTab: boolean('link_new_tab'),
-    link_url: varchar('link_url'),
-    link_label: varchar('link_label'),
-    link_appearance:
-      enum__pages_v_version_hero_section_links_link_appearance('link_appearance').default(
-        'default',
-      ),
-    _uuid: varchar('_uuid'),
-  },
-  (columns) => ({
-    _orderIdx: index('_pages_v_version_hero_section_links_order_idx').on(columns._order),
-    _parentIDIdx: index('_pages_v_version_hero_section_links_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [_pages_v.id],
-      name: '_pages_v_version_hero_section_links_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const _pages_v_blocks_cta_links = pgTable(
-  '_pages_v_blocks_cta_links',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    id: serial('id').primaryKey(),
-    link_type: enum__pages_v_blocks_cta_links_link_type('link_type').default('reference'),
-    link_newTab: boolean('link_new_tab'),
-    link_url: varchar('link_url'),
-    link_label: varchar('link_label'),
-    link_appearance:
-      enum__pages_v_blocks_cta_links_link_appearance('link_appearance').default('default'),
-    _uuid: varchar('_uuid'),
-  },
-  (columns) => ({
-    _orderIdx: index('_pages_v_blocks_cta_links_order_idx').on(columns._order),
-    _parentIDIdx: index('_pages_v_blocks_cta_links_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [_pages_v_blocks_cta.id],
-      name: '_pages_v_blocks_cta_links_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const _pages_v_blocks_cta = pgTable(
-  '_pages_v_blocks_cta',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: serial('id').primaryKey(),
-    richText: jsonb('rich_text'),
-    _uuid: varchar('_uuid'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('_pages_v_blocks_cta_order_idx').on(columns._order),
-    _parentIDIdx: index('_pages_v_blocks_cta_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('_pages_v_blocks_cta_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [_pages_v.id],
-      name: '_pages_v_blocks_cta_parent_id_fk',
     }).onDelete('cascade'),
   }),
 )
@@ -568,62 +292,6 @@ export const _pages_v_blocks_media_block = pgTable(
   }),
 )
 
-export const _pages_v_blocks_archive = pgTable(
-  '_pages_v_blocks_archive',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: serial('id').primaryKey(),
-    introContent: jsonb('intro_content'),
-    populateBy: enum__pages_v_blocks_archive_populate_by('populate_by').default('collection'),
-    relationTo: enum__pages_v_blocks_archive_relation_to('relation_to').default('posts'),
-    limit: numeric('limit').default('10'),
-    _uuid: varchar('_uuid'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('_pages_v_blocks_archive_order_idx').on(columns._order),
-    _parentIDIdx: index('_pages_v_blocks_archive_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('_pages_v_blocks_archive_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [_pages_v.id],
-      name: '_pages_v_blocks_archive_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const _pages_v_blocks_form_block = pgTable(
-  '_pages_v_blocks_form_block',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: serial('id').primaryKey(),
-    form: integer('form_id').references(() => forms.id, {
-      onDelete: 'set null',
-    }),
-    enableIntro: boolean('enable_intro'),
-    introContent: jsonb('intro_content'),
-    _uuid: varchar('_uuid'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('_pages_v_blocks_form_block_order_idx').on(columns._order),
-    _parentIDIdx: index('_pages_v_blocks_form_block_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('_pages_v_blocks_form_block_path_idx').on(columns._path),
-    _pages_v_blocks_form_block_form_idx: index('_pages_v_blocks_form_block_form_idx').on(
-      columns.form,
-    ),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [_pages_v.id],
-      name: '_pages_v_blocks_form_block_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
 export const _pages_v = pgTable(
   '_pages_v',
   {
@@ -632,14 +300,6 @@ export const _pages_v = pgTable(
       onDelete: 'set null',
     }),
     version_title: varchar('version_title'),
-    version_heroSection_title: varchar('version_hero_section_title'),
-    version_heroSection_type: enum__pages_v_version_hero_section_type(
-      'version_hero_section_type',
-    ).default('lowImpact'),
-    version_heroSection_richText: jsonb('version_hero_section_rich_text'),
-    version_heroSection_media: integer('version_hero_section_media_id').references(() => media.id, {
-      onDelete: 'set null',
-    }),
     version_meta_title: varchar('version_meta_title'),
     version_meta_image: integer('version_meta_image_id').references(() => media.id, {
       onDelete: 'set null',
@@ -674,9 +334,6 @@ export const _pages_v = pgTable(
   },
   (columns) => ({
     _pages_v_parent_idx: index('_pages_v_parent_idx').on(columns.parent),
-    _pages_v_version_hero_section_version_hero_section_media_idx: index(
-      '_pages_v_version_hero_section_version_hero_section_media_idx',
-    ).on(columns.version_heroSection_media),
     _pages_v_version_meta_version_meta_image_idx: index(
       '_pages_v_version_meta_version_meta_image_idx',
     ).on(columns.version_meta_image),
@@ -708,7 +365,6 @@ export const _pages_v_rels = pgTable(
     path: varchar('path').notNull(),
     pagesID: integer('pages_id'),
     postsID: integer('posts_id'),
-    categoriesID: integer('categories_id'),
   },
   (columns) => ({
     order: index('_pages_v_rels_order_idx').on(columns.order),
@@ -716,9 +372,6 @@ export const _pages_v_rels = pgTable(
     pathIdx: index('_pages_v_rels_path_idx').on(columns.path),
     _pages_v_rels_pages_id_idx: index('_pages_v_rels_pages_id_idx').on(columns.pagesID),
     _pages_v_rels_posts_id_idx: index('_pages_v_rels_posts_id_idx').on(columns.postsID),
-    _pages_v_rels_categories_id_idx: index('_pages_v_rels_categories_id_idx').on(
-      columns.categoriesID,
-    ),
     parentFk: foreignKey({
       columns: [columns['parent']],
       foreignColumns: [_pages_v.id],
@@ -733,11 +386,6 @@ export const _pages_v_rels = pgTable(
       columns: [columns['postsID']],
       foreignColumns: [posts.id],
       name: '_pages_v_rels_posts_fk',
-    }).onDelete('cascade'),
-    categoriesIdFk: foreignKey({
-      columns: [columns['categoriesID']],
-      foreignColumns: [categories.id],
-      name: '_pages_v_rels_categories_fk',
     }).onDelete('cascade'),
   }),
 )
@@ -1149,7 +797,6 @@ export const poems = pgTable(
   {
     id: serial('id').primaryKey(),
     title: varchar('title'),
-    author: varchar('author').default('Heath Johnston'),
     publishedDate: timestamp('published_date', {
       mode: 'string',
       withTimezone: true,
@@ -1188,7 +835,6 @@ export const _poems_v = pgTable(
       onDelete: 'set null',
     }),
     version_title: varchar('version_title'),
-    version_author: varchar('version_author').default('Heath Johnston'),
     version_publishedDate: timestamp('version_published_date', {
       mode: 'string',
       withTimezone: true,
@@ -1243,399 +889,6 @@ export const _poems_v = pgTable(
     _poems_v_updated_at_idx: index('_poems_v_updated_at_idx').on(columns.updatedAt),
     _poems_v_latest_idx: index('_poems_v_latest_idx').on(columns.latest),
     _poems_v_autosave_idx: index('_poems_v_autosave_idx').on(columns.autosave),
-  }),
-)
-
-export const redirects = pgTable(
-  'redirects',
-  {
-    id: serial('id').primaryKey(),
-    from: varchar('from').notNull(),
-    to_type: enum_redirects_to_type('to_type').default('reference'),
-    to_url: varchar('to_url'),
-    updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-  },
-  (columns) => ({
-    redirects_from_idx: index('redirects_from_idx').on(columns.from),
-    redirects_updated_at_idx: index('redirects_updated_at_idx').on(columns.updatedAt),
-    redirects_created_at_idx: index('redirects_created_at_idx').on(columns.createdAt),
-  }),
-)
-
-export const redirects_rels = pgTable(
-  'redirects_rels',
-  {
-    id: serial('id').primaryKey(),
-    order: integer('order'),
-    parent: integer('parent_id').notNull(),
-    path: varchar('path').notNull(),
-    pagesID: integer('pages_id'),
-    postsID: integer('posts_id'),
-  },
-  (columns) => ({
-    order: index('redirects_rels_order_idx').on(columns.order),
-    parentIdx: index('redirects_rels_parent_idx').on(columns.parent),
-    pathIdx: index('redirects_rels_path_idx').on(columns.path),
-    redirects_rels_pages_id_idx: index('redirects_rels_pages_id_idx').on(columns.pagesID),
-    redirects_rels_posts_id_idx: index('redirects_rels_posts_id_idx').on(columns.postsID),
-    parentFk: foreignKey({
-      columns: [columns['parent']],
-      foreignColumns: [redirects.id],
-      name: 'redirects_rels_parent_fk',
-    }).onDelete('cascade'),
-    pagesIdFk: foreignKey({
-      columns: [columns['pagesID']],
-      foreignColumns: [pages.id],
-      name: 'redirects_rels_pages_fk',
-    }).onDelete('cascade'),
-    postsIdFk: foreignKey({
-      columns: [columns['postsID']],
-      foreignColumns: [posts.id],
-      name: 'redirects_rels_posts_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_checkbox = pgTable(
-  'forms_blocks_checkbox',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    required: boolean('required'),
-    defaultValue: boolean('default_value'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_checkbox_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_checkbox_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_checkbox_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_checkbox_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_country = pgTable(
-  'forms_blocks_country',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_country_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_country_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_country_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_country_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_email = pgTable(
-  'forms_blocks_email',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_email_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_email_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_email_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_email_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_message = pgTable(
-  'forms_blocks_message',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    message: jsonb('message'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_message_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_message_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_message_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_message_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_number = pgTable(
-  'forms_blocks_number',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    defaultValue: numeric('default_value'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_number_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_number_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_number_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_number_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_select_options = pgTable(
-  'forms_blocks_select_options',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: varchar('_parent_id').notNull(),
-    id: varchar('id').primaryKey(),
-    label: varchar('label').notNull(),
-    value: varchar('value').notNull(),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_select_options_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_select_options_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms_blocks_select.id],
-      name: 'forms_blocks_select_options_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_select = pgTable(
-  'forms_blocks_select',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    defaultValue: varchar('default_value'),
-    placeholder: varchar('placeholder'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_select_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_select_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_select_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_select_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_state = pgTable(
-  'forms_blocks_state',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_state_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_state_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_state_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_state_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_text = pgTable(
-  'forms_blocks_text',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    defaultValue: varchar('default_value'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_text_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_text_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_text_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_text_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_blocks_textarea = pgTable(
-  'forms_blocks_textarea',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    _path: text('_path').notNull(),
-    id: varchar('id').primaryKey(),
-    name: varchar('name').notNull(),
-    label: varchar('label'),
-    width: numeric('width'),
-    defaultValue: varchar('default_value'),
-    required: boolean('required'),
-    blockName: varchar('block_name'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_blocks_textarea_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_blocks_textarea_parent_id_idx').on(columns._parentID),
-    _pathIdx: index('forms_blocks_textarea_path_idx').on(columns._path),
-    _parentIdFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_blocks_textarea_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms_emails = pgTable(
-  'forms_emails',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    id: varchar('id').primaryKey(),
-    emailTo: varchar('email_to'),
-    cc: varchar('cc'),
-    bcc: varchar('bcc'),
-    replyTo: varchar('reply_to'),
-    emailFrom: varchar('email_from'),
-    subject: varchar('subject').notNull().default("You''ve received a new message."),
-    message: jsonb('message'),
-  },
-  (columns) => ({
-    _orderIdx: index('forms_emails_order_idx').on(columns._order),
-    _parentIDIdx: index('forms_emails_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [forms.id],
-      name: 'forms_emails_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const forms = pgTable(
-  'forms',
-  {
-    id: serial('id').primaryKey(),
-    title: varchar('title').notNull(),
-    submitButtonLabel: varchar('submit_button_label'),
-    confirmationType: enum_forms_confirmation_type('confirmation_type').default('message'),
-    confirmationMessage: jsonb('confirmation_message'),
-    redirect_url: varchar('redirect_url'),
-    updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-  },
-  (columns) => ({
-    forms_updated_at_idx: index('forms_updated_at_idx').on(columns.updatedAt),
-    forms_created_at_idx: index('forms_created_at_idx').on(columns.createdAt),
-  }),
-)
-
-export const form_submissions_submission_data = pgTable(
-  'form_submissions_submission_data',
-  {
-    _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
-    id: varchar('id').primaryKey(),
-    field: varchar('field').notNull(),
-    value: varchar('value').notNull(),
-  },
-  (columns) => ({
-    _orderIdx: index('form_submissions_submission_data_order_idx').on(columns._order),
-    _parentIDIdx: index('form_submissions_submission_data_parent_id_idx').on(columns._parentID),
-    _parentIDFk: foreignKey({
-      columns: [columns['_parentID']],
-      foreignColumns: [form_submissions.id],
-      name: 'form_submissions_submission_data_parent_id_fk',
-    }).onDelete('cascade'),
-  }),
-)
-
-export const form_submissions = pgTable(
-  'form_submissions',
-  {
-    id: serial('id').primaryKey(),
-    form: integer('form_id')
-      .notNull()
-      .references(() => forms.id, {
-        onDelete: 'set null',
-      }),
-    updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-  },
-  (columns) => ({
-    form_submissions_form_idx: index('form_submissions_form_idx').on(columns.form),
-    form_submissions_updated_at_idx: index('form_submissions_updated_at_idx').on(columns.updatedAt),
-    form_submissions_created_at_idx: index('form_submissions_created_at_idx').on(columns.createdAt),
   }),
 )
 
@@ -1744,9 +997,6 @@ export const payload_locked_documents_rels = pgTable(
     categoriesID: integer('categories_id'),
     usersID: integer('users_id'),
     poemsID: integer('poems_id'),
-    redirectsID: integer('redirects_id'),
-    formsID: integer('forms_id'),
-    'form-submissionsID': integer('form_submissions_id'),
     'payload-jobsID': integer('payload_jobs_id'),
   },
   (columns) => ({
@@ -1771,15 +1021,6 @@ export const payload_locked_documents_rels = pgTable(
     payload_locked_documents_rels_poems_id_idx: index(
       'payload_locked_documents_rels_poems_id_idx',
     ).on(columns.poemsID),
-    payload_locked_documents_rels_redirects_id_idx: index(
-      'payload_locked_documents_rels_redirects_id_idx',
-    ).on(columns.redirectsID),
-    payload_locked_documents_rels_forms_id_idx: index(
-      'payload_locked_documents_rels_forms_id_idx',
-    ).on(columns.formsID),
-    payload_locked_documents_rels_form_submissions_id_idx: index(
-      'payload_locked_documents_rels_form_submissions_id_idx',
-    ).on(columns['form-submissionsID']),
     payload_locked_documents_rels_payload_jobs_id_idx: index(
       'payload_locked_documents_rels_payload_jobs_id_idx',
     ).on(columns['payload-jobsID']),
@@ -1817,21 +1058,6 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['poemsID']],
       foreignColumns: [poems.id],
       name: 'payload_locked_documents_rels_poems_fk',
-    }).onDelete('cascade'),
-    redirectsIdFk: foreignKey({
-      columns: [columns['redirectsID']],
-      foreignColumns: [redirects.id],
-      name: 'payload_locked_documents_rels_redirects_fk',
-    }).onDelete('cascade'),
-    formsIdFk: foreignKey({
-      columns: [columns['formsID']],
-      foreignColumns: [forms.id],
-      name: 'payload_locked_documents_rels_forms_fk',
-    }).onDelete('cascade'),
-    'form-submissionsIdFk': foreignKey({
-      columns: [columns['form-submissionsID']],
-      foreignColumns: [form_submissions.id],
-      name: 'payload_locked_documents_rels_form_submissions_fk',
     }).onDelete('cascade'),
     'payload-jobsIdFk': foreignKey({
       columns: [columns['payload-jobsID']],
@@ -1917,33 +1143,6 @@ export const payload_migrations = pgTable(
   }),
 )
 
-export const relations_pages_hero_section_links = relations(
-  pages_hero_section_links,
-  ({ one }) => ({
-    _parentID: one(pages, {
-      fields: [pages_hero_section_links._parentID],
-      references: [pages.id],
-      relationName: 'heroSection_links',
-    }),
-  }),
-)
-export const relations_pages_blocks_cta_links = relations(pages_blocks_cta_links, ({ one }) => ({
-  _parentID: one(pages_blocks_cta, {
-    fields: [pages_blocks_cta_links._parentID],
-    references: [pages_blocks_cta.id],
-    relationName: 'links',
-  }),
-}))
-export const relations_pages_blocks_cta = relations(pages_blocks_cta, ({ one, many }) => ({
-  _parentID: one(pages, {
-    fields: [pages_blocks_cta._parentID],
-    references: [pages.id],
-    relationName: '_blocks_cta',
-  }),
-  links: many(pages_blocks_cta_links, {
-    relationName: 'links',
-  }),
-}))
 export const relations_pages_blocks_content_columns = relations(
   pages_blocks_content_columns,
   ({ one }) => ({
@@ -1979,25 +1178,6 @@ export const relations_pages_blocks_media_block = relations(
     }),
   }),
 )
-export const relations_pages_blocks_archive = relations(pages_blocks_archive, ({ one }) => ({
-  _parentID: one(pages, {
-    fields: [pages_blocks_archive._parentID],
-    references: [pages.id],
-    relationName: '_blocks_archive',
-  }),
-}))
-export const relations_pages_blocks_form_block = relations(pages_blocks_form_block, ({ one }) => ({
-  _parentID: one(pages, {
-    fields: [pages_blocks_form_block._parentID],
-    references: [pages.id],
-    relationName: '_blocks_formBlock',
-  }),
-  form: one(forms, {
-    fields: [pages_blocks_form_block.form],
-    references: [forms.id],
-    relationName: 'form',
-  }),
-}))
 export const relations_pages_rels = relations(pages_rels, ({ one }) => ({
   parent: one(pages, {
     fields: [pages_rels.parent],
@@ -2014,35 +1194,13 @@ export const relations_pages_rels = relations(pages_rels, ({ one }) => ({
     references: [posts.id],
     relationName: 'posts',
   }),
-  categoriesID: one(categories, {
-    fields: [pages_rels.categoriesID],
-    references: [categories.id],
-    relationName: 'categories',
-  }),
 }))
 export const relations_pages = relations(pages, ({ one, many }) => ({
-  heroSection_links: many(pages_hero_section_links, {
-    relationName: 'heroSection_links',
-  }),
-  heroSection_media: one(media, {
-    fields: [pages.heroSection_media],
-    references: [media.id],
-    relationName: 'heroSection_media',
-  }),
-  _blocks_cta: many(pages_blocks_cta, {
-    relationName: '_blocks_cta',
-  }),
   _blocks_content: many(pages_blocks_content, {
     relationName: '_blocks_content',
   }),
   _blocks_mediaBlock: many(pages_blocks_media_block, {
     relationName: '_blocks_mediaBlock',
-  }),
-  _blocks_archive: many(pages_blocks_archive, {
-    relationName: '_blocks_archive',
-  }),
-  _blocks_formBlock: many(pages_blocks_form_block, {
-    relationName: '_blocks_formBlock',
   }),
   meta_image: one(media, {
     fields: [pages.meta_image],
@@ -2051,36 +1209,6 @@ export const relations_pages = relations(pages, ({ one, many }) => ({
   }),
   _rels: many(pages_rels, {
     relationName: '_rels',
-  }),
-}))
-export const relations__pages_v_version_hero_section_links = relations(
-  _pages_v_version_hero_section_links,
-  ({ one }) => ({
-    _parentID: one(_pages_v, {
-      fields: [_pages_v_version_hero_section_links._parentID],
-      references: [_pages_v.id],
-      relationName: 'version_heroSection_links',
-    }),
-  }),
-)
-export const relations__pages_v_blocks_cta_links = relations(
-  _pages_v_blocks_cta_links,
-  ({ one }) => ({
-    _parentID: one(_pages_v_blocks_cta, {
-      fields: [_pages_v_blocks_cta_links._parentID],
-      references: [_pages_v_blocks_cta.id],
-      relationName: 'links',
-    }),
-  }),
-)
-export const relations__pages_v_blocks_cta = relations(_pages_v_blocks_cta, ({ one, many }) => ({
-  _parentID: one(_pages_v, {
-    fields: [_pages_v_blocks_cta._parentID],
-    references: [_pages_v.id],
-    relationName: '_blocks_cta',
-  }),
-  links: many(_pages_v_blocks_cta_links, {
-    relationName: 'links',
   }),
 }))
 export const relations__pages_v_blocks_content_columns = relations(
@@ -2121,28 +1249,6 @@ export const relations__pages_v_blocks_media_block = relations(
     }),
   }),
 )
-export const relations__pages_v_blocks_archive = relations(_pages_v_blocks_archive, ({ one }) => ({
-  _parentID: one(_pages_v, {
-    fields: [_pages_v_blocks_archive._parentID],
-    references: [_pages_v.id],
-    relationName: '_blocks_archive',
-  }),
-}))
-export const relations__pages_v_blocks_form_block = relations(
-  _pages_v_blocks_form_block,
-  ({ one }) => ({
-    _parentID: one(_pages_v, {
-      fields: [_pages_v_blocks_form_block._parentID],
-      references: [_pages_v.id],
-      relationName: '_blocks_formBlock',
-    }),
-    form: one(forms, {
-      fields: [_pages_v_blocks_form_block.form],
-      references: [forms.id],
-      relationName: 'form',
-    }),
-  }),
-)
 export const relations__pages_v_rels = relations(_pages_v_rels, ({ one }) => ({
   parent: one(_pages_v, {
     fields: [_pages_v_rels.parent],
@@ -2159,11 +1265,6 @@ export const relations__pages_v_rels = relations(_pages_v_rels, ({ one }) => ({
     references: [posts.id],
     relationName: 'posts',
   }),
-  categoriesID: one(categories, {
-    fields: [_pages_v_rels.categoriesID],
-    references: [categories.id],
-    relationName: 'categories',
-  }),
 }))
 export const relations__pages_v = relations(_pages_v, ({ one, many }) => ({
   parent: one(pages, {
@@ -2171,28 +1272,11 @@ export const relations__pages_v = relations(_pages_v, ({ one, many }) => ({
     references: [pages.id],
     relationName: 'parent',
   }),
-  version_heroSection_links: many(_pages_v_version_hero_section_links, {
-    relationName: 'version_heroSection_links',
-  }),
-  version_heroSection_media: one(media, {
-    fields: [_pages_v.version_heroSection_media],
-    references: [media.id],
-    relationName: 'version_heroSection_media',
-  }),
-  _blocks_cta: many(_pages_v_blocks_cta, {
-    relationName: '_blocks_cta',
-  }),
   _blocks_content: many(_pages_v_blocks_content, {
     relationName: '_blocks_content',
   }),
   _blocks_mediaBlock: many(_pages_v_blocks_media_block, {
     relationName: '_blocks_mediaBlock',
-  }),
-  _blocks_archive: many(_pages_v_blocks_archive, {
-    relationName: '_blocks_archive',
-  }),
-  _blocks_formBlock: many(_pages_v_blocks_form_block, {
-    relationName: '_blocks_formBlock',
   }),
   version_meta_image: one(media, {
     fields: [_pages_v.version_meta_image],
@@ -2348,163 +1432,6 @@ export const relations__poems_v = relations(_poems_v, ({ one }) => ({
     relationName: 'version_meta_image',
   }),
 }))
-export const relations_redirects_rels = relations(redirects_rels, ({ one }) => ({
-  parent: one(redirects, {
-    fields: [redirects_rels.parent],
-    references: [redirects.id],
-    relationName: '_rels',
-  }),
-  pagesID: one(pages, {
-    fields: [redirects_rels.pagesID],
-    references: [pages.id],
-    relationName: 'pages',
-  }),
-  postsID: one(posts, {
-    fields: [redirects_rels.postsID],
-    references: [posts.id],
-    relationName: 'posts',
-  }),
-}))
-export const relations_redirects = relations(redirects, ({ many }) => ({
-  _rels: many(redirects_rels, {
-    relationName: '_rels',
-  }),
-}))
-export const relations_forms_blocks_checkbox = relations(forms_blocks_checkbox, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_checkbox._parentID],
-    references: [forms.id],
-    relationName: '_blocks_checkbox',
-  }),
-}))
-export const relations_forms_blocks_country = relations(forms_blocks_country, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_country._parentID],
-    references: [forms.id],
-    relationName: '_blocks_country',
-  }),
-}))
-export const relations_forms_blocks_email = relations(forms_blocks_email, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_email._parentID],
-    references: [forms.id],
-    relationName: '_blocks_email',
-  }),
-}))
-export const relations_forms_blocks_message = relations(forms_blocks_message, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_message._parentID],
-    references: [forms.id],
-    relationName: '_blocks_message',
-  }),
-}))
-export const relations_forms_blocks_number = relations(forms_blocks_number, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_number._parentID],
-    references: [forms.id],
-    relationName: '_blocks_number',
-  }),
-}))
-export const relations_forms_blocks_select_options = relations(
-  forms_blocks_select_options,
-  ({ one }) => ({
-    _parentID: one(forms_blocks_select, {
-      fields: [forms_blocks_select_options._parentID],
-      references: [forms_blocks_select.id],
-      relationName: 'options',
-    }),
-  }),
-)
-export const relations_forms_blocks_select = relations(forms_blocks_select, ({ one, many }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_select._parentID],
-    references: [forms.id],
-    relationName: '_blocks_select',
-  }),
-  options: many(forms_blocks_select_options, {
-    relationName: 'options',
-  }),
-}))
-export const relations_forms_blocks_state = relations(forms_blocks_state, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_state._parentID],
-    references: [forms.id],
-    relationName: '_blocks_state',
-  }),
-}))
-export const relations_forms_blocks_text = relations(forms_blocks_text, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_text._parentID],
-    references: [forms.id],
-    relationName: '_blocks_text',
-  }),
-}))
-export const relations_forms_blocks_textarea = relations(forms_blocks_textarea, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_blocks_textarea._parentID],
-    references: [forms.id],
-    relationName: '_blocks_textarea',
-  }),
-}))
-export const relations_forms_emails = relations(forms_emails, ({ one }) => ({
-  _parentID: one(forms, {
-    fields: [forms_emails._parentID],
-    references: [forms.id],
-    relationName: 'emails',
-  }),
-}))
-export const relations_forms = relations(forms, ({ many }) => ({
-  _blocks_checkbox: many(forms_blocks_checkbox, {
-    relationName: '_blocks_checkbox',
-  }),
-  _blocks_country: many(forms_blocks_country, {
-    relationName: '_blocks_country',
-  }),
-  _blocks_email: many(forms_blocks_email, {
-    relationName: '_blocks_email',
-  }),
-  _blocks_message: many(forms_blocks_message, {
-    relationName: '_blocks_message',
-  }),
-  _blocks_number: many(forms_blocks_number, {
-    relationName: '_blocks_number',
-  }),
-  _blocks_select: many(forms_blocks_select, {
-    relationName: '_blocks_select',
-  }),
-  _blocks_state: many(forms_blocks_state, {
-    relationName: '_blocks_state',
-  }),
-  _blocks_text: many(forms_blocks_text, {
-    relationName: '_blocks_text',
-  }),
-  _blocks_textarea: many(forms_blocks_textarea, {
-    relationName: '_blocks_textarea',
-  }),
-  emails: many(forms_emails, {
-    relationName: 'emails',
-  }),
-}))
-export const relations_form_submissions_submission_data = relations(
-  form_submissions_submission_data,
-  ({ one }) => ({
-    _parentID: one(form_submissions, {
-      fields: [form_submissions_submission_data._parentID],
-      references: [form_submissions.id],
-      relationName: 'submissionData',
-    }),
-  }),
-)
-export const relations_form_submissions = relations(form_submissions, ({ one, many }) => ({
-  form: one(forms, {
-    fields: [form_submissions.form],
-    references: [forms.id],
-    relationName: 'form',
-  }),
-  submissionData: many(form_submissions_submission_data, {
-    relationName: 'submissionData',
-  }),
-}))
 export const relations_payload_jobs_log = relations(payload_jobs_log, ({ one }) => ({
   _parentID: one(payload_jobs, {
     fields: [payload_jobs_log._parentID],
@@ -2555,21 +1482,6 @@ export const relations_payload_locked_documents_rels = relations(
       references: [poems.id],
       relationName: 'poems',
     }),
-    redirectsID: one(redirects, {
-      fields: [payload_locked_documents_rels.redirectsID],
-      references: [redirects.id],
-      relationName: 'redirects',
-    }),
-    formsID: one(forms, {
-      fields: [payload_locked_documents_rels.formsID],
-      references: [forms.id],
-      relationName: 'forms',
-    }),
-    'form-submissionsID': one(form_submissions, {
-      fields: [payload_locked_documents_rels['form-submissionsID']],
-      references: [form_submissions.id],
-      relationName: 'form-submissions',
-    }),
     'payload-jobsID': one(payload_jobs, {
       fields: [payload_locked_documents_rels['payload-jobsID']],
       references: [payload_jobs.id],
@@ -2608,55 +1520,29 @@ export const relations_payload_preferences = relations(payload_preferences, ({ m
 export const relations_payload_migrations = relations(payload_migrations, () => ({}))
 
 type DatabaseSchema = {
-  enum_pages_hero_section_links_link_type: typeof enum_pages_hero_section_links_link_type
-  enum_pages_hero_section_links_link_appearance: typeof enum_pages_hero_section_links_link_appearance
-  enum_pages_blocks_cta_links_link_type: typeof enum_pages_blocks_cta_links_link_type
-  enum_pages_blocks_cta_links_link_appearance: typeof enum_pages_blocks_cta_links_link_appearance
   enum_pages_blocks_content_columns_size: typeof enum_pages_blocks_content_columns_size
   enum_pages_blocks_content_columns_link_type: typeof enum_pages_blocks_content_columns_link_type
   enum_pages_blocks_content_columns_link_appearance: typeof enum_pages_blocks_content_columns_link_appearance
-  enum_pages_blocks_archive_populate_by: typeof enum_pages_blocks_archive_populate_by
-  enum_pages_blocks_archive_relation_to: typeof enum_pages_blocks_archive_relation_to
-  enum_pages_hero_section_type: typeof enum_pages_hero_section_type
   enum_pages_status: typeof enum_pages_status
-  enum__pages_v_version_hero_section_links_link_type: typeof enum__pages_v_version_hero_section_links_link_type
-  enum__pages_v_version_hero_section_links_link_appearance: typeof enum__pages_v_version_hero_section_links_link_appearance
-  enum__pages_v_blocks_cta_links_link_type: typeof enum__pages_v_blocks_cta_links_link_type
-  enum__pages_v_blocks_cta_links_link_appearance: typeof enum__pages_v_blocks_cta_links_link_appearance
   enum__pages_v_blocks_content_columns_size: typeof enum__pages_v_blocks_content_columns_size
   enum__pages_v_blocks_content_columns_link_type: typeof enum__pages_v_blocks_content_columns_link_type
   enum__pages_v_blocks_content_columns_link_appearance: typeof enum__pages_v_blocks_content_columns_link_appearance
-  enum__pages_v_blocks_archive_populate_by: typeof enum__pages_v_blocks_archive_populate_by
-  enum__pages_v_blocks_archive_relation_to: typeof enum__pages_v_blocks_archive_relation_to
-  enum__pages_v_version_hero_section_type: typeof enum__pages_v_version_hero_section_type
   enum__pages_v_version_status: typeof enum__pages_v_version_status
   enum_posts_status: typeof enum_posts_status
   enum__posts_v_version_status: typeof enum__posts_v_version_status
   enum_poems_status: typeof enum_poems_status
   enum__poems_v_version_status: typeof enum__poems_v_version_status
-  enum_redirects_to_type: typeof enum_redirects_to_type
-  enum_forms_confirmation_type: typeof enum_forms_confirmation_type
   enum_payload_jobs_log_task_slug: typeof enum_payload_jobs_log_task_slug
   enum_payload_jobs_log_state: typeof enum_payload_jobs_log_state
   enum_payload_jobs_task_slug: typeof enum_payload_jobs_task_slug
-  pages_hero_section_links: typeof pages_hero_section_links
-  pages_blocks_cta_links: typeof pages_blocks_cta_links
-  pages_blocks_cta: typeof pages_blocks_cta
   pages_blocks_content_columns: typeof pages_blocks_content_columns
   pages_blocks_content: typeof pages_blocks_content
   pages_blocks_media_block: typeof pages_blocks_media_block
-  pages_blocks_archive: typeof pages_blocks_archive
-  pages_blocks_form_block: typeof pages_blocks_form_block
   pages: typeof pages
   pages_rels: typeof pages_rels
-  _pages_v_version_hero_section_links: typeof _pages_v_version_hero_section_links
-  _pages_v_blocks_cta_links: typeof _pages_v_blocks_cta_links
-  _pages_v_blocks_cta: typeof _pages_v_blocks_cta
   _pages_v_blocks_content_columns: typeof _pages_v_blocks_content_columns
   _pages_v_blocks_content: typeof _pages_v_blocks_content
   _pages_v_blocks_media_block: typeof _pages_v_blocks_media_block
-  _pages_v_blocks_archive: typeof _pages_v_blocks_archive
-  _pages_v_blocks_form_block: typeof _pages_v_blocks_form_block
   _pages_v: typeof _pages_v
   _pages_v_rels: typeof _pages_v_rels
   posts_populated_authors: typeof posts_populated_authors
@@ -2671,22 +1557,6 @@ type DatabaseSchema = {
   users: typeof users
   poems: typeof poems
   _poems_v: typeof _poems_v
-  redirects: typeof redirects
-  redirects_rels: typeof redirects_rels
-  forms_blocks_checkbox: typeof forms_blocks_checkbox
-  forms_blocks_country: typeof forms_blocks_country
-  forms_blocks_email: typeof forms_blocks_email
-  forms_blocks_message: typeof forms_blocks_message
-  forms_blocks_number: typeof forms_blocks_number
-  forms_blocks_select_options: typeof forms_blocks_select_options
-  forms_blocks_select: typeof forms_blocks_select
-  forms_blocks_state: typeof forms_blocks_state
-  forms_blocks_text: typeof forms_blocks_text
-  forms_blocks_textarea: typeof forms_blocks_textarea
-  forms_emails: typeof forms_emails
-  forms: typeof forms
-  form_submissions_submission_data: typeof form_submissions_submission_data
-  form_submissions: typeof form_submissions
   payload_jobs_log: typeof payload_jobs_log
   payload_jobs: typeof payload_jobs
   payload_locked_documents: typeof payload_locked_documents
@@ -2694,24 +1564,14 @@ type DatabaseSchema = {
   payload_preferences: typeof payload_preferences
   payload_preferences_rels: typeof payload_preferences_rels
   payload_migrations: typeof payload_migrations
-  relations_pages_hero_section_links: typeof relations_pages_hero_section_links
-  relations_pages_blocks_cta_links: typeof relations_pages_blocks_cta_links
-  relations_pages_blocks_cta: typeof relations_pages_blocks_cta
   relations_pages_blocks_content_columns: typeof relations_pages_blocks_content_columns
   relations_pages_blocks_content: typeof relations_pages_blocks_content
   relations_pages_blocks_media_block: typeof relations_pages_blocks_media_block
-  relations_pages_blocks_archive: typeof relations_pages_blocks_archive
-  relations_pages_blocks_form_block: typeof relations_pages_blocks_form_block
   relations_pages_rels: typeof relations_pages_rels
   relations_pages: typeof relations_pages
-  relations__pages_v_version_hero_section_links: typeof relations__pages_v_version_hero_section_links
-  relations__pages_v_blocks_cta_links: typeof relations__pages_v_blocks_cta_links
-  relations__pages_v_blocks_cta: typeof relations__pages_v_blocks_cta
   relations__pages_v_blocks_content_columns: typeof relations__pages_v_blocks_content_columns
   relations__pages_v_blocks_content: typeof relations__pages_v_blocks_content
   relations__pages_v_blocks_media_block: typeof relations__pages_v_blocks_media_block
-  relations__pages_v_blocks_archive: typeof relations__pages_v_blocks_archive
-  relations__pages_v_blocks_form_block: typeof relations__pages_v_blocks_form_block
   relations__pages_v_rels: typeof relations__pages_v_rels
   relations__pages_v: typeof relations__pages_v
   relations_posts_populated_authors: typeof relations_posts_populated_authors
@@ -2726,22 +1586,6 @@ type DatabaseSchema = {
   relations_users: typeof relations_users
   relations_poems: typeof relations_poems
   relations__poems_v: typeof relations__poems_v
-  relations_redirects_rels: typeof relations_redirects_rels
-  relations_redirects: typeof relations_redirects
-  relations_forms_blocks_checkbox: typeof relations_forms_blocks_checkbox
-  relations_forms_blocks_country: typeof relations_forms_blocks_country
-  relations_forms_blocks_email: typeof relations_forms_blocks_email
-  relations_forms_blocks_message: typeof relations_forms_blocks_message
-  relations_forms_blocks_number: typeof relations_forms_blocks_number
-  relations_forms_blocks_select_options: typeof relations_forms_blocks_select_options
-  relations_forms_blocks_select: typeof relations_forms_blocks_select
-  relations_forms_blocks_state: typeof relations_forms_blocks_state
-  relations_forms_blocks_text: typeof relations_forms_blocks_text
-  relations_forms_blocks_textarea: typeof relations_forms_blocks_textarea
-  relations_forms_emails: typeof relations_forms_emails
-  relations_forms: typeof relations_forms
-  relations_form_submissions_submission_data: typeof relations_form_submissions_submission_data
-  relations_form_submissions: typeof relations_form_submissions
   relations_payload_jobs_log: typeof relations_payload_jobs_log
   relations_payload_jobs: typeof relations_payload_jobs
   relations_payload_locked_documents_rels: typeof relations_payload_locked_documents_rels
@@ -2751,7 +1595,7 @@ type DatabaseSchema = {
   relations_payload_migrations: typeof relations_payload_migrations
 }
 
-declare module '@payloadcms/db-postgres/types' {
+declare module '@payloadcms/db-postgres' {
   export interface GeneratedDatabaseSchema {
     schema: DatabaseSchema
   }
