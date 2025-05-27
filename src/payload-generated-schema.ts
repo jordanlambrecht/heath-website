@@ -626,6 +626,9 @@ export const media = pgTable(
     id: serial('id').primaryKey(),
     alt: varchar('alt'),
     caption: jsonb('caption'),
+    folder: integer('folder_id').references(() => payload_folders.id, {
+      onDelete: 'set null',
+    }),
     updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
       .defaultNow()
       .notNull(),
@@ -685,6 +688,7 @@ export const media = pgTable(
     sizes_og_filename: varchar('sizes_og_filename'),
   },
   (columns) => ({
+    media_folder_idx: index('media_folder_idx').on(columns.folder),
     media_updated_at_idx: index('media_updated_at_idx').on(columns.updatedAt),
     media_created_at_idx: index('media_created_at_idx').on(columns.createdAt),
     media_filename_idx: uniqueIndex('media_filename_idx').on(columns.filename),
@@ -766,6 +770,9 @@ export const users = pgTable(
   {
     id: serial('id').primaryKey(),
     name: varchar('name'),
+    avatar: integer('avatar_id').references(() => media.id, {
+      onDelete: 'set null',
+    }),
     updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
       .defaultNow()
       .notNull(),
@@ -782,10 +789,13 @@ export const users = pgTable(
     }),
     salt: varchar('salt'),
     hash: varchar('hash'),
+    _verified: boolean('_verified'),
+    _verificationToken: varchar('_verificationtoken'),
     loginAttempts: numeric('login_attempts').default('0'),
     lockUntil: timestamp('lock_until', { mode: 'string', withTimezone: true, precision: 3 }),
   },
   (columns) => ({
+    users_avatar_idx: index('users_avatar_idx').on(columns.avatar),
     users_updated_at_idx: index('users_updated_at_idx').on(columns.updatedAt),
     users_created_at_idx: index('users_created_at_idx').on(columns.createdAt),
     users_email_idx: uniqueIndex('users_email_idx').on(columns.email),
@@ -890,6 +900,29 @@ export const _poems_v = pgTable(
     _poems_v_updated_at_idx: index('_poems_v_updated_at_idx').on(columns.updatedAt),
     _poems_v_latest_idx: index('_poems_v_latest_idx').on(columns.latest),
     _poems_v_autosave_idx: index('_poems_v_autosave_idx').on(columns.autosave),
+  }),
+)
+
+export const payload_folders = pgTable(
+  'payload_folders',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name').notNull(),
+    folder: integer('folder_id').references((): AnyPgColumn => payload_folders.id, {
+      onDelete: 'set null',
+    }),
+    updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 })
+      .defaultNow()
+      .notNull(),
+  },
+  (columns) => ({
+    payload_folders_name_idx: index('payload_folders_name_idx').on(columns.name),
+    payload_folders_folder_idx: index('payload_folders_folder_idx').on(columns.folder),
+    payload_folders_updated_at_idx: index('payload_folders_updated_at_idx').on(columns.updatedAt),
+    payload_folders_created_at_idx: index('payload_folders_created_at_idx').on(columns.createdAt),
   }),
 )
 
@@ -998,6 +1031,7 @@ export const payload_locked_documents_rels = pgTable(
     categoriesID: integer('categories_id'),
     usersID: integer('users_id'),
     poemsID: integer('poems_id'),
+    'payload-foldersID': integer('payload_folders_id'),
     'payload-jobsID': integer('payload_jobs_id'),
   },
   (columns) => ({
@@ -1022,6 +1056,9 @@ export const payload_locked_documents_rels = pgTable(
     payload_locked_documents_rels_poems_id_idx: index(
       'payload_locked_documents_rels_poems_id_idx',
     ).on(columns.poemsID),
+    payload_locked_documents_rels_payload_folders_id_idx: index(
+      'payload_locked_documents_rels_payload_folders_id_idx',
+    ).on(columns['payload-foldersID']),
     payload_locked_documents_rels_payload_jobs_id_idx: index(
       'payload_locked_documents_rels_payload_jobs_id_idx',
     ).on(columns['payload-jobsID']),
@@ -1059,6 +1096,11 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['poemsID']],
       foreignColumns: [poems.id],
       name: 'payload_locked_documents_rels_poems_fk',
+    }).onDelete('cascade'),
+    'payload-foldersIdFk': foreignKey({
+      columns: [columns['payload-foldersID']],
+      foreignColumns: [payload_folders.id],
+      name: 'payload_locked_documents_rels_payload_folders_fk',
     }).onDelete('cascade'),
     'payload-jobsIdFk': foreignKey({
       columns: [columns['payload-jobsID']],
@@ -1390,7 +1432,13 @@ export const relations__posts_v = relations(_posts_v, ({ one, many }) => ({
     relationName: '_rels',
   }),
 }))
-export const relations_media = relations(media, () => ({}))
+export const relations_media = relations(media, ({ one }) => ({
+  folder: one(payload_folders, {
+    fields: [media.folder],
+    references: [payload_folders.id],
+    relationName: 'folder',
+  }),
+}))
 export const relations_categories_breadcrumbs = relations(categories_breadcrumbs, ({ one }) => ({
   _parentID: one(categories, {
     fields: [categories_breadcrumbs._parentID],
@@ -1413,7 +1461,13 @@ export const relations_categories = relations(categories, ({ one, many }) => ({
     relationName: 'breadcrumbs',
   }),
 }))
-export const relations_users = relations(users, () => ({}))
+export const relations_users = relations(users, ({ one }) => ({
+  avatar: one(media, {
+    fields: [users.avatar],
+    references: [media.id],
+    relationName: 'avatar',
+  }),
+}))
 export const relations_poems = relations(poems, ({ one }) => ({
   meta_image: one(media, {
     fields: [poems.meta_image],
@@ -1431,6 +1485,13 @@ export const relations__poems_v = relations(_poems_v, ({ one }) => ({
     fields: [_poems_v.version_meta_image],
     references: [media.id],
     relationName: 'version_meta_image',
+  }),
+}))
+export const relations_payload_folders = relations(payload_folders, ({ one }) => ({
+  folder: one(payload_folders, {
+    fields: [payload_folders.folder],
+    references: [payload_folders.id],
+    relationName: 'folder',
   }),
 }))
 export const relations_payload_jobs_log = relations(payload_jobs_log, ({ one }) => ({
@@ -1482,6 +1543,11 @@ export const relations_payload_locked_documents_rels = relations(
       fields: [payload_locked_documents_rels.poemsID],
       references: [poems.id],
       relationName: 'poems',
+    }),
+    'payload-foldersID': one(payload_folders, {
+      fields: [payload_locked_documents_rels['payload-foldersID']],
+      references: [payload_folders.id],
+      relationName: 'payload-folders',
     }),
     'payload-jobsID': one(payload_jobs, {
       fields: [payload_locked_documents_rels['payload-jobsID']],
@@ -1558,6 +1624,7 @@ type DatabaseSchema = {
   users: typeof users
   poems: typeof poems
   _poems_v: typeof _poems_v
+  payload_folders: typeof payload_folders
   payload_jobs_log: typeof payload_jobs_log
   payload_jobs: typeof payload_jobs
   payload_locked_documents: typeof payload_locked_documents
@@ -1587,6 +1654,7 @@ type DatabaseSchema = {
   relations_users: typeof relations_users
   relations_poems: typeof relations_poems
   relations__poems_v: typeof relations__poems_v
+  relations_payload_folders: typeof relations_payload_folders
   relations_payload_jobs_log: typeof relations_payload_jobs_log
   relations_payload_jobs: typeof relations_payload_jobs
   relations_payload_locked_documents_rels: typeof relations_payload_locked_documents_rels

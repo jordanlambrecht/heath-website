@@ -4,13 +4,9 @@ import sharp from 'sharp'
 import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 
-import { Categories } from './collections/Categories'
-import { Media } from './collections/Media'
-import { Pages } from './collections/Pages'
-import { Posts } from './collections/Posts'
-import { Users } from './collections/Users'
-import { Poems } from './collections/Poems' // Import the Poems collection
+import { Media, Pages, Posts, Users, Poems, Categories } from './collections'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -18,28 +14,90 @@ import { getServerSideURL } from './utilities/getURL'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const allowedOrigins = new Set<string>()
+
+const serverURLFromEnv = getServerSideURL()
+if (serverURLFromEnv) {
+  allowedOrigins.add(serverURLFromEnv)
+}
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.add('http://localhost:3000')
+  allowedOrigins.add('http://localhost:3001')
+}
+
 export default buildConfig({
+  serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL,
+  // folders: {
+  //   collectionOverrides: [],
+  //   fieldName: 'folder',
+  //   slug: 'folders',
+  // },
+  email: nodemailerAdapter({
+    defaultFromAddress: process.env.SMTP_FROM_ADDRESS || '',
+    defaultFromName: process.env.SMTP_FROM_NAME || 'Payload',
+    transportOptions: {
+      secure: true,
+      host: process.env.SMTP_HOST,
+      port: 465,
+      // logger: true,
+      // debug: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    },
+  }),
   admin: {
+    user: Users.slug,
+    autoLogin:
+      process.env.NODE_ENV === 'development'
+        ? {
+            email: process.env.LOCAL_PREFILL_USER,
+            password: process.env.LOCAL_PREFILL_PASSWORD,
+            prefillOnly: false,
+          }
+        : false,
     components: {
-      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
-      // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
+      graphics: {
+        Logo: '@/components/Admin/Logo',
+        Icon: '@/components/Admin/Icon',
+      },
+    },
+    meta: {
+      openGraph: {
+        description: 'I love Heath Johnston',
+        images: [
+          {
+            url: `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/media/favicon.png`,
+            width: 160,
+            height: 160,
+          },
+        ],
+        siteName: 'Payload',
+        title: 'My Admin Panel',
+      },
+      titleSuffix: '| Azzo Mulligan Admin',
+      icons: [
+        {
+          rel: 'icon',
+          type: 'image/png',
+          url: '/media/favicon.png',
+        },
+      ],
     },
     importMap: {
       baseDir: path.resolve(dirname),
     },
-    user: Users.slug,
   },
-  // This config helps us configure global or default features that the other editors can inherit
+
   editor: defaultLexical,
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Poems], // Add Poems to the collections array
-  cors: [getServerSideURL()].filter(Boolean),
+  collections: [Pages, Posts, Media, Categories, Users, Poems],
+  cors: Array.from(allowedOrigins).filter(Boolean),
   plugins: [
     ...plugins,
     // storage-adapter-placeholder
