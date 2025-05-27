@@ -115,3 +115,14 @@ html[data-theme='dark'],
 html[data-theme='light'] {
   opacity: initial;
 }
+@layer components {
+  .slug-field-component {
+    .label-wrapper {
+      @apply flex justify-between items-center;
+    }
+
+    .lock-button {
+      @apply m-0 pb-1.25; /* 0.3125rem */
+    }
+  }
+}
