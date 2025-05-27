@@ -11,3 +11,8 @@ public/media/
 
 public/robots.txt
 public/sitemap*.xml
+.env.local
+.env.production
+.env.development
+.env.production.local
+.env.development.local
