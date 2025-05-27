@@ -1,4 +1,3 @@
-import { User } from '../payload-types'
 export { Categories } from './Categories'
 export { Media } from './Media'
 export { Poems } from './Poems'
