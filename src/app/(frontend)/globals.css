@@ -65,7 +65,7 @@
   [data-theme='dark'] {
     /* Define dark theme equivalents for your new palette */
     --background: 23.76% 0.004 345.53; /* Example: Using text color as dark background */
-    --foreground: 97.52% 0.017 67.63; /* Example: Using background color as dark text */
+    --foreground: oklch(97.52% 0.017 67.63); /* Example: Using background color as dark text */
 
     --card: 0 0% 4%;
     --card-foreground: 210 40% 98%;
