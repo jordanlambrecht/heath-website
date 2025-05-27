@@ -129,7 +129,7 @@ export default async function PoemPage({ params: paramsPromise }: PoemPageProps)
           </div>
         </nav>
       )}
-      <article className="prose dark:prose-invert bg-softer rounded-xl py-8 px-6 text-text border-2 border-foreground">
+      <article className=" bg-softer rounded-xl py-8 px-6 text-text border-2 border-foreground">
         <h1 className="text-3xl md:text-4xl font-bold text-primary mb-4">{poem.title}</h1>
         {poem.publishedDate && (
           <div className="inline-block rounded bg-background py-1 px-2 my-2 ">

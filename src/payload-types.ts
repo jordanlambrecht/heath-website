@@ -68,7 +68,6 @@ export interface Config {
   blocks: {};
   collections: {
     pages: Page;
-    posts: Post;
     media: Media;
     categories: Category;
     users: User;
@@ -87,7 +86,6 @@ export interface Config {
   };
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -197,8 +195,8 @@ export interface ContentBlock {
                 value: number | Page;
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
+                relationTo: 'poems';
+                value: number | Poem;
               } | null);
           url?: string | null;
           label: string;
@@ -216,9 +214,9 @@ export interface ContentBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
+ * via the `definition` "poems".
  */
-export interface Post {
+export interface Poem {
   id: number;
   title: string;
   heroImage?: (number | null) | Media;
@@ -237,8 +235,52 @@ export interface Post {
     };
     [k: string]: unknown;
   };
-  relatedPosts?: (number | Post)[] | null;
-  categories?: (number | Category)[] | null;
+  /**
+   * Analysis of the poem, including themes, structure, and literary devices.
+   */
+  analysis?: {
+    enable?: boolean | null;
+    display?: {
+      /**
+       * If enabled, the analysis will be displayed live on the poem page.
+       */
+      displayAnalysis?: boolean | null;
+      /**
+       * If enabled, the analysis title will be displayed above the analysis text.
+       */
+      displayTitle?: boolean | null;
+      /**
+       * Where to display the analysis in relation to the poem content.
+       */
+      analysisLocation?: ('top' | 'bottom') | null;
+      /**
+       * If enabled, the analysis will be treated as a spoiler and hidden by default. A user will need to click to reveal it.
+       */
+      treatAsSpoiler?: boolean | null;
+    };
+    /**
+     * Title for the analysis section. (Optional)
+     */
+    analysisTitle?: string | null;
+    analysisText?: {
+      root: {
+        type: string;
+        children: {
+          type: string;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  /**
+   * SEO metadata for the poem, used for search engines, the title at the top of the browser tab, and social media.
+   */
   meta?: {
     title?: string | null;
     /**
@@ -247,7 +289,20 @@ export interface Post {
     image?: (number | null) | Media;
     description?: string | null;
   };
+  description?: {
+    /**
+     * If enabled, a description will be displayed below the poem content.
+     */
+    enableDescription?: boolean | null;
+    /**
+     * This will append the description to the top/bottom of the poem.
+     */
+    displayDescription?: boolean | null;
+    descriptionLocation?: ('top' | 'bottom') | null;
+    description?: string | null;
+  };
   publishedAt?: string | null;
+  categories?: (number | Category)[] | null;
   slug?: string | null;
   slugLock?: boolean | null;
   updatedAt: string;
@@ -430,103 +485,6 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "poems".
- */
-export interface Poem {
-  id: number;
-  title: string;
-  heroImage?: (number | null) | Media;
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: string;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  /**
-   * Analysis of the poem, including themes, structure, and literary devices.
-   */
-  analysis?: {
-    enable?: boolean | null;
-    display?: {
-      /**
-       * If enabled, the analysis will be displayed live on the poem page.
-       */
-      displayAnalysis?: boolean | null;
-      /**
-       * If enabled, the analysis title will be displayed above the analysis text.
-       */
-      displayTitle?: boolean | null;
-      /**
-       * Where to display the analysis in relation to the poem content.
-       */
-      analysisLocation?: ('top' | 'bottom') | null;
-      /**
-       * If enabled, the analysis will be treated as a spoiler and hidden by default. A user will need to click to reveal it.
-       */
-      treatAsSpoiler?: boolean | null;
-    };
-    /**
-     * Title for the analysis section. (Optional)
-     */
-    analysisTitle?: string | null;
-    analysisText?: {
-      root: {
-        type: string;
-        children: {
-          type: string;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-  };
-  /**
-   * SEO metadata for the poem, used for search engines, the title at the top of the browser tab, and social media.
-   */
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  description?: {
-    /**
-     * If enabled, a description will be displayed below the poem content.
-     */
-    enableDescription?: boolean | null;
-    /**
-     * This will append the description to the top/bottom of the poem.
-     */
-    displayDescription?: boolean | null;
-    descriptionLocation?: ('top' | 'bottom') | null;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  categories?: (number | Category)[] | null;
-  slug?: string | null;
-  slugLock?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -656,10 +614,6 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
-        relationTo: 'posts';
-        value: number | Post;
-      } | null)
-    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -782,30 +736,6 @@ export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts_select".
- */
-export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  heroImage?: T;
-  content?: T;
-  relatedPosts?: T;
-  categories?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  slug?: T;
-  slugLock?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1090,10 +1020,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'pages';
           value: number | Page;
-        } | null)
-      | ({
-          relationTo: 'posts';
-          value: number | Post;
         } | null)
       | ({
           relationTo: 'poems';
