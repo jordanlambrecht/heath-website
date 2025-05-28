@@ -27,6 +27,17 @@ interface MediaWithAlt {
   // Add other properties if needed for type checking, e.g., id: string | number
 }
 
+/**
+ * Extracts plain text from a Lexical data structure, traversing its nodes recursively.
+ * 
+ * @param {LexicalData | unknown} lexicalData - The Lexical data structure to extract text from. 
+ *        Expected to have a `root` property containing an array of nodes.
+ * @returns {string} A plain text string extracted from the Lexical data, truncated to 200 characters.
+ * 
+ * The function trims the resulting text and limits its length to 200 characters. 
+ * It handles `text` nodes by appending their content, `linebreak` nodes by adding a newline, 
+ * and recursively processes child nodes if present.
+ */
 function extractPlainTextFromLexical(lexicalData: LexicalData | unknown): string {
   let text = ''
   // Type guard to ensure lexicalData is of the expected shape
