@@ -1,3 +1,5 @@
+// src/collections/Poems/hooks/revalidatePoem.ts
+
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload'
 
 import { revalidatePath, revalidateTag } from 'next/cache'

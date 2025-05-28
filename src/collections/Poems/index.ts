@@ -1,3 +1,5 @@
+// src/collections/Poems/index.ts
+
 import type { CollectionConfig } from 'payload'
 
 import { authenticated, authenticatedOrPublished } from '@/access'

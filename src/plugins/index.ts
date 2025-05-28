@@ -1,12 +1,10 @@
-import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
-import { seoPlugin } from '@payloadcms/plugin-seo'
-import { redirectsPlugin } from '@payloadcms/plugin-redirects'
+// src/plugins/index.ts
+
 import { Plugin } from 'payload'
-import { GenerateURL } from '@payloadcms/plugin-seo/types'
+import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
+import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { revalidateRedirects } from '@/hooks/revalidateRedirects'
-import { Page, Poem } from '@/payload-types'
-import { getServerSideURL } from '@/utilities/getURL'
 
 // const generateURL: GenerateURL<Poem | Page> = ({
 //   doc,

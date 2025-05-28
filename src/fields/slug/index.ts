@@ -38,7 +38,7 @@ export const slugField: Slug = (fieldToUse = 'title', overrides = {}, additional
   }
 
   const {
-    admin: slugAdminOverrides,
+    // admin: slugAdminOverrides,
     hooks: slugHooksOverrides,
     validate: providedValidate,
     ...restOfSlugOverrides
