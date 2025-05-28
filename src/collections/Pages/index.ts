@@ -7,6 +7,7 @@ import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { slugField } from '@/fields/slug'
 import { populatePublishedAt } from '@/hooks/populatePublishedAt'
 import { revalidateDelete, revalidatePage } from './hooks/revalidatePage'
+import { seoFields } from './fields/seo'
 
 export const Pages: CollectionConfig<'pages'> = {
   slug: 'pages',
@@ -32,21 +33,45 @@ export const Pages: CollectionConfig<'pages'> = {
       required: true,
     },
     {
-      type: 'group',
-
-      fields: [
+      type: 'tabs',
+      tabs: [
         {
-          name: 'layout',
-          type: 'blocks',
-          blocks: [Content, MediaBlock],
-          required: true,
-          admin: {
-            initCollapsed: true,
-          },
+          label: 'Main Content',
+          fields: [
+            {
+              name: 'displayTitle',
+              type: 'text',
+              required: false,
+              admin: {
+                description:
+                  'Optional title to display on the page. If not set, the main title will be used.',
+              },
+            },
+            {
+              type: 'group',
+
+              fields: [
+                {
+                  name: 'layout',
+                  type: 'blocks',
+                  blocks: [Content, MediaBlock],
+                  required: true,
+                  admin: {
+                    initCollapsed: true,
+                  },
+                },
+              ],
+              label: 'Page Layout',
+            },
+          ],
+        },
+        {
+          label: 'Meta',
+          fields: seoFields,
         },
       ],
-      label: 'Page Layout',
     },
+
     {
       name: 'publishedAt',
       type: 'date',
