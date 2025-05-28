@@ -1,15 +1,29 @@
-import type { CheckboxField, TextField } from 'payload'
-
+import type { CheckboxField, TextField, TextFieldSingleValidation } from 'payload'
 import { formatSlugHook } from './formatSlug'
 
 type Overrides = {
-  slugOverrides?: Partial<TextField>
+  slugOverrides?: Partial<
+    Omit<TextField, 'hasMany' | 'maxRows' | 'minRows' | 'type'> & {
+      type?: 'text'
+      validate?: TextFieldSingleValidation
+    }
+  >
   checkboxOverrides?: Partial<CheckboxField>
 }
 
-type Slug = (fieldToUse?: string, overrides?: Overrides) => [TextField, CheckboxField]
+export type AdditionalSlugSourceType = 'media-alt' | 'lexical-plain-text'
+export interface AdditionalSlugSource {
+  name: string
+  sourceType: AdditionalSlugSourceType
+}
 
-export const slugField: Slug = (fieldToUse = 'title', overrides = {}) => {
+type Slug = (
+  fieldToUse?: string,
+  overrides?: Overrides,
+  additionalSources?: AdditionalSlugSource[],
+) => [TextField, CheckboxField]
+
+export const slugField: Slug = (fieldToUse = 'title', overrides = {}, additionalSources = []) => {
   const { slugOverrides, checkboxOverrides } = overrides
 
   const checkBoxField: CheckboxField = {
@@ -23,31 +37,44 @@ export const slugField: Slug = (fieldToUse = 'title', overrides = {}) => {
     ...checkboxOverrides,
   }
 
-  // @ts-expect-error - ts mismatch Partial<TextField> with TextField
-  const slugField: TextField = {
+  const {
+    // admin: slugAdminOverrides,
+    hooks: slugHooksOverrides,
+    validate: providedValidate,
+    ...restOfSlugOverrides
+  } = slugOverrides || {}
+
+  const slugFieldDefinition: TextField = {
     name: 'slug',
     type: 'text',
+    unique: true,
     index: true,
     label: 'Slug',
-    ...(slugOverrides || {}),
+    ...restOfSlugOverrides,
+    hasMany: false,
+    maxRows: undefined,
+    minRows: undefined,
     hooks: {
-      // Kept this in for hook or API based updates
       beforeValidate: [formatSlugHook(fieldToUse)],
+      ...(slugHooksOverrides || {}),
     },
     admin: {
       position: 'sidebar',
-      ...(slugOverrides?.admin || {}),
+      // ...(slugAdminOverrides || {}),
       components: {
         Field: {
-          path: '@/fields/slug/SlugComponent#SlugComponent',
+          path: '@/fields/slug/SlugComponent',
           clientProps: {
             fieldToUse,
+            additionalSources,
             checkboxFieldPath: checkBoxField.name,
           },
         },
       },
     },
+
+    validate: providedValidate as TextFieldSingleValidation | undefined,
   }
 
-  return [slugField, checkBoxField]
+  return [slugFieldDefinition, checkBoxField]
 }

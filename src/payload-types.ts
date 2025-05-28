@@ -68,11 +68,11 @@ export interface Config {
   blocks: {};
   collections: {
     pages: Page;
-    posts: Post;
     media: Media;
     categories: Category;
     users: User;
     poems: Poem;
+    redirects: Redirect;
     'payload-folders': FolderInterface;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -86,11 +86,11 @@ export interface Config {
   };
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     poems: PoemsSelect<false> | PoemsSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -154,7 +154,14 @@ export interface UserAuthOperations {
 export interface Page {
   id: number;
   title: string;
+  /**
+   * Optional title to display on the page. If not set, the main title will be used.
+   */
+  displayTitle?: string | null;
   layout: (ContentBlock | MediaBlock)[];
+  /**
+   * SEO metadata for the page, used for search engines, the title at the top of the browser tab, and social media.
+   */
   meta?: {
     title?: string | null;
     /**
@@ -203,8 +210,8 @@ export interface ContentBlock {
                 value: number | Page;
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
+                relationTo: 'poems';
+                value: number | Poem;
               } | null);
           url?: string | null;
           label: string;
@@ -222,9 +229,9 @@ export interface ContentBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
+ * via the `definition` "poems".
  */
-export interface Post {
+export interface Poem {
   id: number;
   title: string;
   heroImage?: (number | null) | Media;
@@ -243,8 +250,52 @@ export interface Post {
     };
     [k: string]: unknown;
   };
-  relatedPosts?: (number | Post)[] | null;
-  categories?: (number | Category)[] | null;
+  /**
+   * Analysis of the poem, including themes, structure, and literary devices.
+   */
+  analysis?: {
+    enable?: boolean | null;
+    display?: {
+      /**
+       * If enabled, the analysis will be displayed live on the poem page.
+       */
+      displayAnalysis?: boolean | null;
+      /**
+       * If enabled, the analysis title will be displayed above the analysis text.
+       */
+      displayTitle?: boolean | null;
+      /**
+       * Where to display the analysis in relation to the poem content.
+       */
+      analysisLocation?: ('top' | 'bottom') | null;
+      /**
+       * If enabled, the analysis will be treated as a spoiler and hidden by default. A user will need to click to reveal it.
+       */
+      treatAsSpoiler?: boolean | null;
+    };
+    /**
+     * Title for the analysis section. (Optional)
+     */
+    analysisTitle?: string | null;
+    analysisText?: {
+      root: {
+        type: string;
+        children: {
+          type: string;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  /**
+   * SEO metadata for the poem, used for search engines, the title at the top of the browser tab, and social media.
+   */
   meta?: {
     title?: string | null;
     /**
@@ -253,14 +304,20 @@ export interface Post {
     image?: (number | null) | Media;
     description?: string | null;
   };
+  description?: {
+    /**
+     * If enabled, a description will be displayed below the poem content.
+     */
+    enableDescription?: boolean | null;
+    /**
+     * This will append the description to the top/bottom of the poem.
+     */
+    displayDescription?: boolean | null;
+    descriptionLocation?: ('top' | 'bottom') | null;
+    description?: string | null;
+  };
   publishedAt?: string | null;
-  authors?: (number | User)[] | null;
-  populatedAuthors?:
-    | {
-        id?: string | null;
-        name?: string | null;
-      }[]
-    | null;
+  categories?: (number | Category)[] | null;
   slug?: string | null;
   slugLock?: boolean | null;
   updatedAt: string;
@@ -408,6 +465,16 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaBlock".
+ */
+export interface MediaBlock {
+  media: number | Media;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaBlock';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -433,50 +500,30 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "MediaBlock".
+ * via the `definition` "redirects".
  */
-export interface MediaBlock {
-  media: number | Media;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'mediaBlock';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "poems".
- */
-export interface Poem {
+export interface Redirect {
   id: number;
-  title: string;
-  publishedDate?: string | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: string;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
+  /**
+   * You will need to rebuild the website when changing this field.
+   */
+  from: string;
+  to?: {
+    type?: ('reference' | 'custom') | null;
+    reference?:
+      | ({
+          relationTo: 'poems';
+          value: number | Poem;
+        } | null)
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null);
+    url?: string | null;
   };
-  slug?: string | null;
-  slugLock?: boolean | null;
+  type: '301' | '302';
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -582,10 +629,6 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
-        relationTo: 'posts';
-        value: number | Post;
-      } | null)
-    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -600,6 +643,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'poems';
         value: number | Poem;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null)
     | ({
         relationTo: 'payload-folders';
@@ -657,6 +704,7 @@ export interface PayloadMigration {
  */
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
+  displayTitle?: T;
   layout?:
     | T
     | {
@@ -711,37 +759,6 @@ export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts_select".
- */
-export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  heroImage?: T;
-  content?: T;
-  relatedPosts?: T;
-  categories?: T;
-  meta?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  authors?: T;
-  populatedAuthors?:
-    | T
-    | {
-        id?: T;
-        name?: T;
-      };
-  slug?: T;
-  slugLock?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -883,8 +900,23 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface PoemsSelect<T extends boolean = true> {
   title?: T;
-  publishedDate?: T;
+  heroImage?: T;
   content?: T;
+  analysis?:
+    | T
+    | {
+        enable?: T;
+        display?:
+          | T
+          | {
+              displayAnalysis?: T;
+              displayTitle?: T;
+              analysisLocation?: T;
+              treatAsSpoiler?: T;
+            };
+        analysisTitle?: T;
+        analysisText?: T;
+      };
   meta?:
     | T
     | {
@@ -892,11 +924,38 @@ export interface PoemsSelect<T extends boolean = true> {
         image?: T;
         description?: T;
       };
+  description?:
+    | T
+    | {
+        enableDescription?: T;
+        displayDescription?: T;
+        descriptionLocation?: T;
+        description?: T;
+      };
+  publishedAt?: T;
+  categories?: T;
   slug?: T;
   slugLock?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        type?: T;
+        reference?: T;
+        url?: T;
+      };
+  type?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -986,8 +1045,8 @@ export interface TaskSchedulePublish {
           value: number | Page;
         } | null)
       | ({
-          relationTo: 'posts';
-          value: number | Post;
+          relationTo: 'poems';
+          value: number | Poem;
         } | null);
     global?: string | null;
     user?: (number | null) | User;

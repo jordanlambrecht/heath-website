@@ -1,20 +1,39 @@
 'use client'
 import React, { useCallback, useEffect } from 'react'
-import { TextFieldClientProps } from 'payload'
-
+import type { TextFieldClientProps } from 'payload'
 import { useField, Button, TextInput, FieldLabel, useFormFields, useForm } from '@payloadcms/ui'
-
 import { formatSlug } from './formatSlug'
-import './index.scss'
+import type { AdditionalSlugSource } from './index'
+function extractPlainTextFromLexical(lexicalData: any): string {
+  let text = ''
+  if (lexicalData && lexicalData.root && lexicalData.root.children) {
+    const traverse = (nodes: any[]) => {
+      for (const node of nodes) {
+        if (node.type === 'text' && node.text) {
+          text += node.text + ' '
+        } else if (node.type === 'linebreak') {
+          text += '\n'
+        }
+        if (node.children) {
+          traverse(node.children)
+        }
+      }
+    }
+    traverse(lexicalData.root.children)
+  }
+  return text.trim().substring(0, 200)
+}
 
 type SlugComponentProps = {
   fieldToUse: string
+  additionalSources?: AdditionalSlugSource[]
   checkboxFieldPath: string
 } & TextFieldClientProps
 
 export const SlugComponent: React.FC<SlugComponentProps> = ({
   field,
   fieldToUse,
+  additionalSources = [],
   checkboxFieldPath: checkboxFieldPathFromProps,
   path,
   readOnly: readOnlyFromProps,
@@ -22,67 +41,107 @@ export const SlugComponent: React.FC<SlugComponentProps> = ({
   const { label } = field
 
   const checkboxFieldPath = path?.includes('.')
-    ? `${path}.${checkboxFieldPathFromProps}`
+    ? `${path.substring(0, path.lastIndexOf('.') + 1)}${checkboxFieldPathFromProps}`
     : checkboxFieldPathFromProps
 
   const { value, setValue } = useField<string>({ path: path || field.name })
-
   const { dispatchFields } = useForm()
 
-  // The value of the checkbox
-  // We're using separate useFormFields to minimise re-renders
-  const checkboxValue = useFormFields(([fields]) => {
-    return fields[checkboxFieldPath]?.value as string
+  const fieldsToWatch = [fieldToUse, ...additionalSources.map((s) => s.name)]
+
+  const watchedFieldValues = useFormFields(([fields, dispatch]) => {
+    const values: Record<string, any> = {}
+    fieldsToWatch.forEach((fieldName) => {
+      values[fieldName] = fields[fieldName]?.value
+    })
+    return values
   })
 
-  // The value of the field we're listening to for the slug
-  const targetFieldValue = useFormFields(([fields]) => {
-    return fields[fieldToUse]?.value as string
+  const checkboxValue = useFormFields(([fields]) => {
+    return fields[checkboxFieldPath]?.value as boolean | undefined
   })
 
   useEffect(() => {
-    if (checkboxValue) {
-      if (targetFieldValue) {
-        const formattedSlug = formatSlug(targetFieldValue)
+    // Only auto-generate if the slug is "locked" (checkboxValue is true or undefined initially)
+    if (checkboxValue === true || checkboxValue === undefined) {
+      let sourceText = ''
 
-        if (value !== formattedSlug) setValue(formattedSlug)
-      } else {
-        if (value !== '') setValue('')
+      // 1. Try primary fieldToUse
+      const primarySourceValue = watchedFieldValues[fieldToUse]
+      if (typeof primarySourceValue === 'string' && primarySourceValue.trim()) {
+        sourceText = primarySourceValue.trim()
+      }
+
+      // 2. If primary source is empty, try additionalSources
+      if (!sourceText && additionalSources.length > 0) {
+        for (const source of additionalSources) {
+          const additionalFieldValue = watchedFieldValues[source.name]
+          if (additionalFieldValue) {
+            if (source.sourceType === 'media-alt') {
+              // Assuming additionalFieldValue is a populated media object or its ID
+              if (
+                typeof additionalFieldValue === 'object' &&
+                additionalFieldValue !== null &&
+                typeof (additionalFieldValue as any).alt === 'string' &&
+                (additionalFieldValue as any).alt.trim()
+              ) {
+                sourceText = (additionalFieldValue as any).alt.trim()
+                break
+              }
+              // If it's an ID, we can't get 'alt' here without another fetch.
+            } else if (source.sourceType === 'lexical-plain-text') {
+              const plainText = extractPlainTextFromLexical(additionalFieldValue)
+              if (plainText) {
+                sourceText = plainText
+                break
+              }
+            }
+          }
+        }
+      }
+
+      const newSlug = sourceText ? formatSlug(sourceText) : ''
+      if (value !== newSlug) {
+        setValue(newSlug)
       }
     }
-  }, [targetFieldValue, checkboxValue, setValue, value])
+  }, [watchedFieldValues, checkboxValue, fieldToUse, additionalSources, setValue, value])
 
   const handleLock = useCallback(
     (e: React.MouseEvent<Element>) => {
       e.preventDefault()
-
       dispatchFields({
         type: 'UPDATE',
         path: checkboxFieldPath,
-        value: !checkboxValue,
+        value: !(checkboxValue === true),
       })
     },
     [checkboxValue, checkboxFieldPath, dispatchFields],
   )
 
-  const readOnly = readOnlyFromProps || checkboxValue
+  const readOnly = readOnlyFromProps || checkboxValue === true || checkboxValue === undefined
 
   return (
-    <div className="field-type slug-field-component">
+    <div className="field-type slug slug-field-component">
       <div className="label-wrapper">
-        <FieldLabel htmlFor={`field-${path}`} label={label} />
-
-        <Button className="lock-button" buttonStyle="none" onClick={handleLock}>
-          {checkboxValue ? 'Unlock' : 'Lock'}
+        <FieldLabel htmlFor={`field-${path || field.name}`} label={label || 'Slug'} />
+        <Button
+          className="lock-button"
+          buttonStyle="none"
+          onClick={handleLock}
+          tooltip={readOnly ? 'Unlock to edit manually' : 'Lock to auto-generate'}
+        >
+          {readOnly ? 'Unlock' : 'Lock'}
         </Button>
       </div>
-
       <TextInput
-        value={value}
-        onChange={setValue}
         path={path || field.name}
-        readOnly={Boolean(readOnly)}
+        value={value || ''}
+        onChange={(e) => setValue(typeof e === 'string' ? e : e.target.value)} // Ensure value is string
+        readOnly={readOnly}
       />
     </div>
   )
 }
+
+export default SlugComponent

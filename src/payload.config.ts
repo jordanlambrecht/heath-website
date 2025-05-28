@@ -6,7 +6,7 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 
-import { Media, Pages, Posts, Users, Poems, Categories } from './collections'
+import { Media, Pages, Users, Poems, Categories } from './collections'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -96,7 +96,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Poems],
+  collections: [Pages, Media, Categories, Users, Poems],
   cors: Array.from(allowedOrigins).filter(Boolean),
   plugins: [
     ...plugins,

@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <InitTheme />
           <link href="/media/favicon.png" rel="icon" sizes="160x160" />
         </head>
-        <body className="bg-background text-text flex flex-col min-h-screen antialiased">
+        <body className="bg-background text-text flex flex-col min-h-screen antialiased w-full overflow-x-hidden mx-auto">
           <Providers>
             <SiteHeader />
             <main className="grow pt-8 pb-16">{children}</main>
