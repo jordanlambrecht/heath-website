@@ -5,8 +5,8 @@ import configPromise from '@payload-config'
 import { draftMode } from 'next/headers'
 
 import type { Page as PageType } from '@/payload-types'
-import { RenderBlocks } from '@/blocks/RenderBlocks' // Assuming RenderBlocks is in this path
-import { generateMeta } from '@/utilities/generateMeta' // Assuming generateMeta is in this path
+import { RenderBlocks } from '@/blocks/RenderBlocks'
+import { generateMeta } from '@/utilities/generateMeta'
 
 // Fetch page data
 const queryAboutPage = cache(async () => {
@@ -19,14 +19,13 @@ const queryAboutPage = cache(async () => {
       slug: {
         equals: 'about',
       },
-      // Ensure we only fetch published pages if not in draft mode
       ...(!draft && { _status: { equals: 'published' } }),
     },
-    depth: 1, // Adjust depth as needed for linked resources in blocks
+    depth: 4,
     draft,
     limit: 1,
     pagination: false,
-    overrideAccess: draft, // Allows access to drafts if draft mode is enabled
+    overrideAccess: draft,
   })
 
   return result.docs?.[0] || null
@@ -41,31 +40,29 @@ export default async function AboutPage() {
       <article className="pt-16 pb-24 bg-background text-text">
         <div className="container">
           <div className="prose dark:prose-invert lg:prose-xl mx-auto py-12">
-            <h1>About Heath Johnston</h1>
-            <p>
-              Welcome to the about page. Content for this section is managed through the CMS. If
-              you're seeing this message, it means the specific "about" page has not been created or
-              published yet.
-            </p>
-            <p>
-              Heath Johnston is a writer and poet. More information will be available here soon.
-            </p>
-            {/* You can add more default content or a call to action here */}
+            <h1>About</h1>
+            <p>Coming soon...</p>
           </div>
         </div>
       </article>
     )
   }
 
-  const { layout, title } = page // Destructure title if you want to use it
+  const { layout, title, displayTitle } = page
 
   return (
     <article className="pt-16 pb-24 bg-background text-text">
       <div className="container">
-        {/* Example of using the page title from CMS if it exists */}
-        {/* <h1 className="text-4xl font-bold text-primary mb-8">{title}</h1> */}
+        <div>
+          {displayTitle ? (
+            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-6">{displayTitle}</h1>
+          ) : title ? (
+            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-6">{title}</h1>
+          ) : (
+            <h1>About</h1>
+          )}
+        </div>
       </div>
-      {/* Render page blocks */}
       <RenderBlocks blocks={layout} />
     </article>
   )
@@ -77,8 +74,8 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!page) {
     // Fallback metadata if page is not found
     return {
-      title: 'About Heath Johnston',
-      description: 'Learn more about the poet Heath Johnston. Content coming soon.',
+      title: 'About | Azzo Mulligan',
+      description: 'Learn more about the poet Azzo Mulligan. Content coming soon.',
     }
   }
   return generateMeta({ doc: page })
