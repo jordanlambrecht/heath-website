@@ -9,13 +9,13 @@ const getPagesSitemap = unstable_cache(
     const SITE_URL =
       process.env.NEXT_PUBLIC_SERVER_URL ||
       process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-      'https://example.com'
+      'https://azzomulligan.com'
 
     const results = await payload.find({
       collection: 'pages',
       overrideAccess: false,
       draft: false,
-      depth: 0,
+      depth: 1,
       limit: 1000,
       pagination: false,
       where: {
