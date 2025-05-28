@@ -20,6 +20,7 @@ export const Poems: CollectionConfig = {
     title: true,
     slug: true,
     categories: true,
+    id: true,
   },
   admin: {
     defaultColumns: ['title', 'slug', 'updatedAt'],
