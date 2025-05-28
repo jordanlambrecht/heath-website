@@ -84,7 +84,6 @@ export const SlugComponent: React.FC<SlugComponentProps> = ({
   // Use a more specific type for watchedFieldValues if possible,
   // but Record<string, unknown> is safer than Record<string, any>
   const watchedFieldValues = useFormFields(([fields, _dispatch]) => {
-    // Prefix dispatch with _
     const values: Record<string, unknown> = {} // Use unknown instead of any
     fieldsToWatch.forEach((fieldName) => {
       // Ensure fieldName exists in fields before accessing
