@@ -38,7 +38,7 @@ export const seoFields: Field[] = [
     ],
     admin: {
       description:
-        'SEO metadata for the poem, used for search engines, the title at the top of the browser tab, and social media.',
+        'SEO metadata for the page, used for search engines, the title at the top of the browser tab, and social media.',
     },
   },
 ]

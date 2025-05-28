@@ -169,6 +169,12 @@ export const pages = pgTable(
   {
     id: serial('id').primaryKey(),
     title: varchar('title'),
+    displayTitle: varchar('display_title'),
+    meta_title: varchar('meta_title'),
+    meta_image: integer('meta_image_id').references(() => media.id, {
+      onDelete: 'set null',
+    }),
+    meta_description: varchar('meta_description'),
     publishedAt: timestamp('published_at', { mode: 'string', withTimezone: true, precision: 3 }),
     slug: varchar('slug'),
     slugLock: boolean('slug_lock').default(true),
@@ -181,6 +187,7 @@ export const pages = pgTable(
     _status: enum_pages_status('_status').default('draft'),
   },
   (columns) => ({
+    pages_meta_meta_image_idx: index('pages_meta_meta_image_idx').on(columns.meta_image),
     pages_slug_idx: uniqueIndex('pages_slug_idx').on(columns.slug),
     pages_updated_at_idx: index('pages_updated_at_idx').on(columns.updatedAt),
     pages_created_at_idx: index('pages_created_at_idx').on(columns.createdAt),
@@ -308,6 +315,12 @@ export const _pages_v = pgTable(
       onDelete: 'set null',
     }),
     version_title: varchar('version_title'),
+    version_displayTitle: varchar('version_display_title'),
+    version_meta_title: varchar('version_meta_title'),
+    version_meta_image: integer('version_meta_image_id').references(() => media.id, {
+      onDelete: 'set null',
+    }),
+    version_meta_description: varchar('version_meta_description'),
     version_publishedAt: timestamp('version_published_at', {
       mode: 'string',
       withTimezone: true,
@@ -337,6 +350,9 @@ export const _pages_v = pgTable(
   },
   (columns) => ({
     _pages_v_parent_idx: index('_pages_v_parent_idx').on(columns.parent),
+    _pages_v_version_meta_version_meta_image_idx: index(
+      '_pages_v_version_meta_version_meta_image_idx',
+    ).on(columns.version_meta_image),
     _pages_v_version_version_slug_idx: index('_pages_v_version_version_slug_idx').on(
       columns.version_slug,
     ),
@@ -1167,12 +1183,17 @@ export const relations_pages_rels = relations(pages_rels, ({ one }) => ({
     relationName: 'poems',
   }),
 }))
-export const relations_pages = relations(pages, ({ many }) => ({
+export const relations_pages = relations(pages, ({ one, many }) => ({
   _blocks_content: many(pages_blocks_content, {
     relationName: '_blocks_content',
   }),
   _blocks_mediaBlock: many(pages_blocks_media_block, {
     relationName: '_blocks_mediaBlock',
+  }),
+  meta_image: one(media, {
+    fields: [pages.meta_image],
+    references: [media.id],
+    relationName: 'meta_image',
   }),
   _rels: many(pages_rels, {
     relationName: '_rels',
@@ -1244,6 +1265,11 @@ export const relations__pages_v = relations(_pages_v, ({ one, many }) => ({
   }),
   _blocks_mediaBlock: many(_pages_v_blocks_media_block, {
     relationName: '_blocks_mediaBlock',
+  }),
+  version_meta_image: one(media, {
+    fields: [_pages_v.version_meta_image],
+    references: [media.id],
+    relationName: 'version_meta_image',
   }),
   _rels: many(_pages_v_rels, {
     relationName: '_rels',

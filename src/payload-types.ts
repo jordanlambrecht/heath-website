@@ -154,7 +154,22 @@ export interface UserAuthOperations {
 export interface Page {
   id: number;
   title: string;
+  /**
+   * Optional title to display on the page. If not set, the main title will be used.
+   */
+  displayTitle?: string | null;
   layout: (ContentBlock | MediaBlock)[];
+  /**
+   * SEO metadata for the page, used for search engines, the title at the top of the browser tab, and social media.
+   */
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
   publishedAt?: string | null;
   slug?: string | null;
   slugLock?: boolean | null;
@@ -689,11 +704,19 @@ export interface PayloadMigration {
  */
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
+  displayTitle?: T;
   layout?:
     | T
     | {
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        image?: T;
+        description?: T;
       };
   publishedAt?: T;
   slug?: T;
