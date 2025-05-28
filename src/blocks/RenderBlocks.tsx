@@ -9,14 +9,15 @@ type BlockComponentProps = {
   disableInnerContainer?: boolean
 }
 
-const blockComponents: Record<string, React.ComponentType<any & BlockComponentProps>> = {
+const blockComponents: Record<
+  string,
+  React.ComponentType<Page['layout'][0] & BlockComponentProps>
+> = {
   content: ContentBlock,
   mediaBlock: MediaBlock,
 }
 
-export const RenderBlocks: React.FC<{
-  blocks: Page['layout'][0][]
-}> = (props) => {
+export function RenderBlocks(props: { blocks: Page['layout'][0][] }) {
   const { blocks } = props
 
   const hasBlocks = blocks && Array.isArray(blocks) && blocks.length > 0
