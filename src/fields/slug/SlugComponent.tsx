@@ -4,10 +4,42 @@ import type { TextFieldClientProps } from 'payload'
 import { useField, Button, TextInput, FieldLabel, useFormFields, useForm } from '@payloadcms/ui'
 import { formatSlug } from './formatSlug'
 import type { AdditionalSlugSource } from './index'
-function extractPlainTextFromLexical(lexicalData: any): string {
+
+// Define a more specific type for Lexical data if possible, or use a broader one for now
+// For a simple text extraction, this structure is a common pattern.
+interface LexicalNode {
+  type: string
+  text?: string
+  children?: LexicalNode[]
+}
+
+interface LexicalRoot {
+  children: LexicalNode[]
+}
+
+interface LexicalData {
+  root: LexicalRoot
+}
+
+// Define a type for media objects, focusing on the 'alt' text
+interface MediaWithAlt {
+  alt?: string
+  // Add other properties if needed for type checking, e.g., id: string | number
+}
+
+function extractPlainTextFromLexical(lexicalData: LexicalData | unknown): string {
   let text = ''
-  if (lexicalData && lexicalData.root && lexicalData.root.children) {
-    const traverse = (nodes: any[]) => {
+  // Type guard to ensure lexicalData is of the expected shape
+  if (
+    lexicalData &&
+    typeof lexicalData === 'object' &&
+    'root' in lexicalData &&
+    lexicalData.root &&
+    typeof lexicalData.root === 'object' &&
+    'children' in lexicalData.root &&
+    Array.isArray((lexicalData.root as LexicalRoot).children)
+  ) {
+    const traverse = (nodes: LexicalNode[]) => {
       for (const node of nodes) {
         if (node.type === 'text' && node.text) {
           text += node.text + ' '
@@ -19,7 +51,7 @@ function extractPlainTextFromLexical(lexicalData: any): string {
         }
       }
     }
-    traverse(lexicalData.root.children)
+    traverse((lexicalData.root as LexicalRoot).children)
   }
   return text.trim().substring(0, 200)
 }
@@ -49,48 +81,58 @@ export const SlugComponent: React.FC<SlugComponentProps> = ({
 
   const fieldsToWatch = [fieldToUse, ...additionalSources.map((s) => s.name)]
 
-  const watchedFieldValues = useFormFields(([fields, dispatch]) => {
-    const values: Record<string, any> = {}
+  // Use a more specific type for watchedFieldValues if possible,
+  // but Record<string, unknown> is safer than Record<string, any>
+  const watchedFieldValues = useFormFields(([fields, _dispatch]) => {
+    // Prefix dispatch with _
+    const values: Record<string, unknown> = {} // Use unknown instead of any
     fieldsToWatch.forEach((fieldName) => {
-      values[fieldName] = fields[fieldName]?.value
+      // Ensure fieldName exists in fields before accessing
+      if (fields[fieldName]) {
+        values[fieldName] = fields[fieldName]?.value
+      } else {
+        values[fieldName] = undefined // Or null, depending on how you want to handle missing fields
+      }
     })
     return values
   })
 
   const checkboxValue = useFormFields(([fields]) => {
-    return fields[checkboxFieldPath]?.value as boolean | undefined
+    // Ensure checkboxFieldPath exists in fields before accessing
+    if (fields[checkboxFieldPath]) {
+      return fields[checkboxFieldPath]?.value as boolean | undefined
+    }
+    return undefined
   })
 
   useEffect(() => {
-    // Only auto-generate if the slug is "locked" (checkboxValue is true or undefined initially)
     if (checkboxValue === true || checkboxValue === undefined) {
       let sourceText = ''
 
-      // 1. Try primary fieldToUse
       const primarySourceValue = watchedFieldValues[fieldToUse]
       if (typeof primarySourceValue === 'string' && primarySourceValue.trim()) {
         sourceText = primarySourceValue.trim()
       }
 
-      // 2. If primary source is empty, try additionalSources
       if (!sourceText && additionalSources.length > 0) {
         for (const source of additionalSources) {
           const additionalFieldValue = watchedFieldValues[source.name]
           if (additionalFieldValue) {
             if (source.sourceType === 'media-alt') {
-              // Assuming additionalFieldValue is a populated media object or its ID
+              // Type guard for media object
               if (
                 typeof additionalFieldValue === 'object' &&
                 additionalFieldValue !== null &&
-                typeof (additionalFieldValue as any).alt === 'string' &&
-                (additionalFieldValue as any).alt.trim()
+                'alt' in additionalFieldValue && // Check if 'alt' property exists
+                typeof (additionalFieldValue as MediaWithAlt).alt === 'string' &&
+                (additionalFieldValue as MediaWithAlt).alt?.trim()
               ) {
-                sourceText = (additionalFieldValue as any).alt.trim()
+                sourceText = (additionalFieldValue as MediaWithAlt).alt!.trim()
                 break
               }
-              // If it's an ID, we can't get 'alt' here without another fetch.
             } else if (source.sourceType === 'lexical-plain-text') {
-              const plainText = extractPlainTextFromLexical(additionalFieldValue)
+              // extractPlainTextFromLexical now has a more specific input type
+              const plainText = extractPlainTextFromLexical(additionalFieldValue as LexicalData)
               if (plainText) {
                 sourceText = plainText
                 break
@@ -108,7 +150,8 @@ export const SlugComponent: React.FC<SlugComponentProps> = ({
   }, [watchedFieldValues, checkboxValue, fieldToUse, additionalSources, setValue, value])
 
   const handleLock = useCallback(
-    (e: React.MouseEvent<Element>) => {
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      // More specific event type
       e.preventDefault()
       dispatchFields({
         type: 'UPDATE',
@@ -137,7 +180,7 @@ export const SlugComponent: React.FC<SlugComponentProps> = ({
       <TextInput
         path={path || field.name}
         value={value || ''}
-        onChange={(e) => setValue(typeof e === 'string' ? e : e.target.value)} // Ensure value is string
+        onChange={(e) => setValue(typeof e === 'string' ? e : e.target.value)}
         readOnly={readOnly}
       />
     </div>
