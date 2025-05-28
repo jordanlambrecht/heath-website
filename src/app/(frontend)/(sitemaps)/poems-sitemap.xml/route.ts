@@ -40,10 +40,10 @@ const GetPoemsSitemap = unstable_cache(
 
     const sitemap = results.docs
       ? results.docs
-          .filter((poem) => Boolean(poem?.slug))
+          .filter((poem) => Boolean(poem?.slug) && poem?.slug !== 'home') // Filter out 'home' slug
           .map((poem) => {
             return {
-              loc: poem?.slug === 'home' ? `${SITE_URL}/` : `${SITE_URL}/${poem?.slug}`,
+              loc: `${SITE_URL}/${poem?.slug}`,
               lastmod: poem.updatedAt || dateFallback,
             }
           })
