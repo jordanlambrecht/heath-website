@@ -9,7 +9,7 @@ const queryAllPoems = cache(async () => {
   try {
     const poems = await payload.find({
       collection: 'poems',
-      depth: 0,
+      depth: 1,
       limit: 0,
       overrideAccess: false,
       sort: 'title',

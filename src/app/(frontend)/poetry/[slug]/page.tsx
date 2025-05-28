@@ -30,7 +30,7 @@ const queryPoemBySlug = cache(async (slug: string) => {
           equals: slug,
         },
       },
-      depth: 2,
+      depth: 1,
       draft,
       limit: 1,
       pagination: false,

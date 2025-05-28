@@ -21,7 +21,7 @@ const queryAboutPage = cache(async () => {
       },
       ...(!draft && { _status: { equals: 'published' } }),
     },
-    depth: 4,
+    depth: 1,
     draft,
     limit: 1,
     pagination: false,
