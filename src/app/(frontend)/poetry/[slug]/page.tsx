@@ -182,7 +182,7 @@ export default async function PoemPage({ params: paramsPromise }: PoemPageProps)
           <AnalysisSection />
         )}
 
-        {poem.content && <RichText data={poem.content} enableProse />}
+        {poem.content && <RichText data={poem.content} />}
 
         {descriptionEnabled && poem.description?.descriptionLocation === 'bottom' && (
           <DescriptionSection />

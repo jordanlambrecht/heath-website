@@ -412,9 +412,6 @@ export const media = pgTable(
     id: serial('id').primaryKey(),
     alt: varchar('alt'),
     caption: jsonb('caption'),
-    folder: integer('folder_id').references(() => payload_folders.id, {
-      onDelete: 'set null',
-    }),
     updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
       .defaultNow()
       .notNull(),
@@ -474,7 +471,6 @@ export const media = pgTable(
     sizes_og_filename: varchar('sizes_og_filename'),
   },
   (columns) => ({
-    media_folder_idx: index('media_folder_idx').on(columns.folder),
     media_updated_at_idx: index('media_updated_at_idx').on(columns.updatedAt),
     media_created_at_idx: index('media_created_at_idx').on(columns.createdAt),
     media_filename_idx: uniqueIndex('media_filename_idx').on(columns.filename),
@@ -548,6 +544,30 @@ export const categories = pgTable(
     categories_parent_idx: index('categories_parent_idx').on(columns.parent),
     categories_updated_at_idx: index('categories_updated_at_idx').on(columns.updatedAt),
     categories_created_at_idx: index('categories_created_at_idx').on(columns.createdAt),
+  }),
+)
+
+export const users_sessions = pgTable(
+  'users_sessions',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: varchar('id').primaryKey(),
+    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 }),
+    expiresAt: timestamp('expires_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    }).notNull(),
+  },
+  (columns) => ({
+    _orderIdx: index('users_sessions_order_idx').on(columns._order),
+    _parentIDIdx: index('users_sessions_parent_id_idx').on(columns._parentID),
+    _parentIDFk: foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [users.id],
+      name: 'users_sessions_parent_id_fk',
+    }).onDelete('cascade'),
   }),
 )
 
@@ -808,7 +828,7 @@ export const redirects = pgTable(
       .notNull(),
   },
   (columns) => ({
-    redirects_from_idx: index('redirects_from_idx').on(columns.from),
+    redirects_from_idx: uniqueIndex('redirects_from_idx').on(columns.from),
     redirects_updated_at_idx: index('redirects_updated_at_idx').on(columns.updatedAt),
     redirects_created_at_idx: index('redirects_created_at_idx').on(columns.createdAt),
   }),
@@ -845,29 +865,6 @@ export const redirects_rels = pgTable(
       foreignColumns: [pages.id],
       name: 'redirects_rels_pages_fk',
     }).onDelete('cascade'),
-  }),
-)
-
-export const payload_folders = pgTable(
-  'payload_folders',
-  {
-    id: serial('id').primaryKey(),
-    name: varchar('name').notNull(),
-    folder: integer('folder_id').references((): AnyPgColumn => payload_folders.id, {
-      onDelete: 'set null',
-    }),
-    updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 })
-      .defaultNow()
-      .notNull(),
-  },
-  (columns) => ({
-    payload_folders_name_idx: index('payload_folders_name_idx').on(columns.name),
-    payload_folders_folder_idx: index('payload_folders_folder_idx').on(columns.folder),
-    payload_folders_updated_at_idx: index('payload_folders_updated_at_idx').on(columns.updatedAt),
-    payload_folders_created_at_idx: index('payload_folders_created_at_idx').on(columns.createdAt),
   }),
 )
 
@@ -976,7 +973,6 @@ export const payload_locked_documents_rels = pgTable(
     usersID: integer('users_id'),
     poemsID: integer('poems_id'),
     redirectsID: integer('redirects_id'),
-    'payload-foldersID': integer('payload_folders_id'),
     'payload-jobsID': integer('payload_jobs_id'),
   },
   (columns) => ({
@@ -1001,9 +997,6 @@ export const payload_locked_documents_rels = pgTable(
     payload_locked_documents_rels_redirects_id_idx: index(
       'payload_locked_documents_rels_redirects_id_idx',
     ).on(columns.redirectsID),
-    payload_locked_documents_rels_payload_folders_id_idx: index(
-      'payload_locked_documents_rels_payload_folders_id_idx',
-    ).on(columns['payload-foldersID']),
     payload_locked_documents_rels_payload_jobs_id_idx: index(
       'payload_locked_documents_rels_payload_jobs_id_idx',
     ).on(columns['payload-jobsID']),
@@ -1041,11 +1034,6 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['redirectsID']],
       foreignColumns: [redirects.id],
       name: 'payload_locked_documents_rels_redirects_fk',
-    }).onDelete('cascade'),
-    'payload-foldersIdFk': foreignKey({
-      columns: [columns['payload-foldersID']],
-      foreignColumns: [payload_folders.id],
-      name: 'payload_locked_documents_rels_payload_folders_fk',
     }).onDelete('cascade'),
     'payload-jobsIdFk': foreignKey({
       columns: [columns['payload-jobsID']],
@@ -1275,13 +1263,7 @@ export const relations__pages_v = relations(_pages_v, ({ one, many }) => ({
     relationName: '_rels',
   }),
 }))
-export const relations_media = relations(media, ({ one }) => ({
-  folder: one(payload_folders, {
-    fields: [media.folder],
-    references: [payload_folders.id],
-    relationName: 'folder',
-  }),
-}))
+export const relations_media = relations(media, () => ({}))
 export const relations_categories_breadcrumbs = relations(categories_breadcrumbs, ({ one }) => ({
   _parentID: one(categories, {
     fields: [categories_breadcrumbs._parentID],
@@ -1304,11 +1286,21 @@ export const relations_categories = relations(categories, ({ one, many }) => ({
     relationName: 'breadcrumbs',
   }),
 }))
-export const relations_users = relations(users, ({ one }) => ({
+export const relations_users_sessions = relations(users_sessions, ({ one }) => ({
+  _parentID: one(users, {
+    fields: [users_sessions._parentID],
+    references: [users.id],
+    relationName: 'sessions',
+  }),
+}))
+export const relations_users = relations(users, ({ one, many }) => ({
   avatar: one(media, {
     fields: [users.avatar],
     references: [media.id],
     relationName: 'avatar',
+  }),
+  sessions: many(users_sessions, {
+    relationName: 'sessions',
   }),
 }))
 export const relations_poems_rels = relations(poems_rels, ({ one }) => ({
@@ -1392,13 +1384,6 @@ export const relations_redirects = relations(redirects, ({ many }) => ({
     relationName: '_rels',
   }),
 }))
-export const relations_payload_folders = relations(payload_folders, ({ one }) => ({
-  folder: one(payload_folders, {
-    fields: [payload_folders.folder],
-    references: [payload_folders.id],
-    relationName: 'folder',
-  }),
-}))
 export const relations_payload_jobs_log = relations(payload_jobs_log, ({ one }) => ({
   _parentID: one(payload_jobs, {
     fields: [payload_jobs_log._parentID],
@@ -1448,11 +1433,6 @@ export const relations_payload_locked_documents_rels = relations(
       fields: [payload_locked_documents_rels.redirectsID],
       references: [redirects.id],
       relationName: 'redirects',
-    }),
-    'payload-foldersID': one(payload_folders, {
-      fields: [payload_locked_documents_rels['payload-foldersID']],
-      references: [payload_folders.id],
-      relationName: 'payload-folders',
     }),
     'payload-jobsID': one(payload_jobs, {
       fields: [payload_locked_documents_rels['payload-jobsID']],
@@ -1524,6 +1504,7 @@ type DatabaseSchema = {
   media: typeof media
   categories_breadcrumbs: typeof categories_breadcrumbs
   categories: typeof categories
+  users_sessions: typeof users_sessions
   users: typeof users
   poems: typeof poems
   poems_rels: typeof poems_rels
@@ -1531,7 +1512,6 @@ type DatabaseSchema = {
   _poems_v_rels: typeof _poems_v_rels
   redirects: typeof redirects
   redirects_rels: typeof redirects_rels
-  payload_folders: typeof payload_folders
   payload_jobs_log: typeof payload_jobs_log
   payload_jobs: typeof payload_jobs
   payload_locked_documents: typeof payload_locked_documents
@@ -1552,6 +1532,7 @@ type DatabaseSchema = {
   relations_media: typeof relations_media
   relations_categories_breadcrumbs: typeof relations_categories_breadcrumbs
   relations_categories: typeof relations_categories
+  relations_users_sessions: typeof relations_users_sessions
   relations_users: typeof relations_users
   relations_poems_rels: typeof relations_poems_rels
   relations_poems: typeof relations_poems
@@ -1559,7 +1540,6 @@ type DatabaseSchema = {
   relations__poems_v: typeof relations__poems_v
   relations_redirects_rels: typeof relations_redirects_rels
   relations_redirects: typeof relations_redirects
-  relations_payload_folders: typeof relations_payload_folders
   relations_payload_jobs_log: typeof relations_payload_jobs_log
   relations_payload_jobs: typeof relations_payload_jobs
   relations_payload_locked_documents_rels: typeof relations_payload_locked_documents_rels

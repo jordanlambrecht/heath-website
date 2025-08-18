@@ -10,9 +10,6 @@ import { anyone, authenticated } from '@/access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  admin: {
-    folders: true,
-  },
   access: {
     create: authenticated,
     delete: authenticated,
