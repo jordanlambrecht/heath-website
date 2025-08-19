@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 type PayloadFindResult = {
-  docs?: any[]
+  docs?: unknown[]
   totalDocs?: number
 }
 
@@ -16,8 +16,7 @@ export async function POST(req: Request) {
   }
 
   // req.payload is injected by Payload when running inside the Payload server context
-  const anyReq = req as any
-  const payload = anyReq.payload
+  const payload = (req as unknown as Record<string, unknown>).payload
   if (!payload) {
     return NextResponse.json({ error: 'payload not available on request' }, { status: 500 })
   }
@@ -25,11 +24,13 @@ export async function POST(req: Request) {
   try {
     const limit = 500
     let page = 1
-    let allComments: any[] = []
+    const allComments: unknown[] = []
 
     while (true) {
       // payload.find returns { docs, totalDocs, limit, page } shape
-      const res: PayloadFindResult = await payload.find({
+      const res: PayloadFindResult = await (payload as unknown as {
+        find: (args: unknown) => Promise<PayloadFindResult>
+      }).find({
         collection: 'comments',
         limit,
         page,
@@ -44,13 +45,14 @@ export async function POST(req: Request) {
 
     const map = new Map<string, string[]>()
     for (const c of allComments) {
-      const poemRef = c?.poem
+      const comment = c as Record<string, unknown>
+      const poemRef = comment?.poem
       const poemId = poemRef
         ? typeof poemRef === 'object'
-          ? (poemRef.id ?? poemRef._id ?? null)
+          ? ((poemRef as Record<string, unknown>).id ?? (poemRef as Record<string, unknown>)._id ?? null)
           : poemRef
         : null
-      const commentId = c?.id ?? c?._id
+      const commentId = comment?.id ?? comment?._id
       if (!poemId || !commentId) continue
       const key = String(poemId)
       const arr = map.get(key) || []
@@ -58,12 +60,12 @@ export async function POST(req: Request) {
       map.set(key, arr)
     }
 
-    let poemsUpdated = 0
-    const errors: any[] = []
+  let poemsUpdated = 0
+  const errors: Array<Record<string, unknown>> = []
     for (const [poemId, ids] of map.entries()) {
       const uniq = Array.from(new Set(ids))
       try {
-        await payload.update({
+  await (payload as unknown as { update: (args: unknown) => Promise<unknown> }).update({
           collection: 'poems',
           id: poemId,
           data: { comments: uniq },
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
         })
         poemsUpdated += 1
       } catch (e) {
-        errors.push({ poemId, error: String(e) })
+    errors.push({ poemId, error: String(e) })
       }
     }
 

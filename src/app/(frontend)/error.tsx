@@ -15,12 +15,12 @@ export class GracefullyDegradingErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
-  private contentRef: React.RefObject<HTMLDivElement>
+  private contentRef: React.RefObject<HTMLDivElement | null>
 
   constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { hasError: false }
-    this.contentRef = React.createRef<any>()
+  this.contentRef = React.createRef<HTMLDivElement>()
   }
 
   static getDerivedStateFromError(_: Error): ErrorBoundaryState {

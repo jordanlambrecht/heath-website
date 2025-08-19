@@ -2,44 +2,48 @@ import type { CollectionConfig } from 'payload'
 import { revalidateComments } from './hooks/revalidateComments'
 
 // Sync poem.comments on create/update
-const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: any) => {
+const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unknown; doc: unknown; previousDoc?: unknown }) => {
+  const safe = (v: unknown) => v as Record<string, unknown>
   try {
-    const payload = req.payload
-    const commentId = (doc as any).id
+    const reqObj = safe(req)
+    const payload = reqObj.payload as unknown as {
+      findByID: (args: unknown) => Promise<unknown>
+      update: (args: unknown) => Promise<unknown>
+    }
+    const commentId = String((safe(doc).id ?? safe(doc)._id) ?? '')
 
-    const newRef = (doc as any).poem
-    const newPoemId = newRef
-      ? typeof newRef === 'object'
-        ? (newRef.id ?? newRef._id ?? null)
-        : newRef
-      : null
+    const extractId = (ref: unknown) => {
+      if (!ref) return null
+      if (typeof ref === 'object') {
+        const r = ref as Record<string, unknown>
+        return r.id ?? r._id ?? null
+      }
+      return ref
+    }
 
-    const prevRef = previousDoc ? (previousDoc as any).poem : null
-    const prevPoemId = prevRef
-      ? typeof prevRef === 'object'
-        ? (prevRef.id ?? prevRef._id ?? null)
-        : prevRef
-      : null
+    const newRef = extractId(safe(doc).poem)
+    const newPoemId = newRef ?? null
+
+    const prevRef = previousDoc ? extractId(safe(previousDoc).poem) : null
+    const prevPoemId = prevRef ?? null
 
     // If moved between poems, remove from previous poem
     if (prevPoemId && String(prevPoemId) !== String(newPoemId)) {
       try {
-        const prevPoem = await payload.findByID({
+  const prevPoem = await payload.findByID({
           collection: 'poems',
           id: prevPoemId,
           depth: 0,
           overrideAccess: true,
         })
-        const prevComments: any[] = (prevPoem?.comments || []).filter(
-          (id: any) => String(id) !== String(commentId),
-        )
+  const prevComments = (((prevPoem as Record<string, unknown>)?.comments as unknown[]) || []).filter((id) => String(id) !== commentId)
         await payload.update({
           collection: 'poems',
           id: prevPoemId,
           data: { comments: prevComments },
           overrideAccess: true,
         })
-      } catch (e) {
+      } catch (e: unknown) {
         console.error('Error removing comment from previous poem', e)
       }
     }
@@ -47,15 +51,15 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: any) => {
     // If there's a new poem, ensure it includes the comment id (dedupe)
     if (newPoemId) {
       try {
-        const poem = await payload.findByID({
+  const poem = await payload.findByID({
           collection: 'poems',
           id: newPoemId,
           depth: 0,
           overrideAccess: true,
         })
-        const existing: string[] = (poem?.comments || []).map((x: any) => String(x))
-        if (!existing.includes(String(commentId))) {
-          const updated = [...(poem?.comments || []), commentId]
+  const existing = ((((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]).map((x) => String(x))
+        if (!existing.includes(commentId)) {
+          const updated = [...(((poem as Record<string, unknown>)?.comments as unknown[]) || []), commentId]
           await payload.update({
             collection: 'poems',
             id: newPoemId,
@@ -63,26 +67,26 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: any) => {
             overrideAccess: true,
           })
         }
-      } catch (e) {
+      } catch (e: unknown) {
         console.error('Error adding comment to poem', e)
       }
     }
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error syncing poem comments after change', err)
   }
 }
 
 // Remove comment id from poem.comments on delete
-const removeCommentFromPoemAfterDelete = async ({ req, doc }: any) => {
+const removeCommentFromPoemAfterDelete = async ({ req, doc }: { req: unknown; doc: unknown }) => {
+  const safe = (v: unknown) => v as Record<string, unknown>
   try {
-    const payload = req.payload
-    const commentId = (doc as any).id
-    const poemRef = (doc as any).poem
-    const poemId = poemRef
-      ? typeof poemRef === 'object'
-        ? (poemRef.id ?? poemRef._id ?? null)
-        : poemRef
-      : null
+    const payload = safe(req).payload as unknown as {
+      findByID: (args: unknown) => Promise<unknown>
+      update: (args: unknown) => Promise<unknown>
+    }
+    const commentId = String((safe(doc).id ?? safe(doc)._id) ?? '')
+  const poemRef = safe(doc).poem
+  const poemId = poemRef && typeof poemRef === 'object' ? ((poemRef as Record<string, unknown>).id ?? (poemRef as Record<string, unknown>)._id ?? null) : poemRef
     if (!poemId) return
     try {
       const poem = await payload.findByID({
@@ -91,19 +95,17 @@ const removeCommentFromPoemAfterDelete = async ({ req, doc }: any) => {
         depth: 0,
         overrideAccess: true,
       })
-      const remaining: any[] = (poem?.comments || []).filter(
-        (id: any) => String(id) !== String(commentId),
-      )
+  const remaining = ((((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]).filter((id) => String(id) !== commentId)
       await payload.update({
         collection: 'poems',
         id: poemId,
         data: { comments: remaining },
         overrideAccess: true,
       })
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Error removing deleted comment from poem', e)
     }
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error in removeCommentFromPoemAfterDelete', err)
   }
 }

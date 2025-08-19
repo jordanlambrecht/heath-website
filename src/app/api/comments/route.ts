@@ -9,9 +9,13 @@ export async function POST(req: Request) {
     // Reuse the simple in-memory rate limiter pattern
     const RATE_LIMIT_PER_MIN = Number(process.env.LIKES_RATE_PER_MIN || '10')
     const RATE_WINDOW_MS = 60_000
-    ;(global as any).__comments_rate_limits = (global as any).__comments_rate_limits || new Map()
-    const rateMap: Map<string, { count: number; windowStart: number }> = (global as any)
-      .__comments_rate_limits
+    ;(global as unknown as Record<string, unknown>).__comments_rate_limits =
+      (global as unknown as Record<string, unknown>).__comments_rate_limits || new Map()
+    const rateMap: Map<string, { count: number; windowStart: number }> =
+      ((global as unknown as Record<string, unknown>).__comments_rate_limits as unknown) as Map<string, {
+        count: number
+        windowStart: number
+      }>
     const forwardedFor: string = (req.headers.get('x-forwarded-for') || '') as string
     const realIp: string = (req.headers.get('x-real-ip') || '') as string
     const firstForward = (forwardedFor.split(',')[0] ?? '').trim()
@@ -29,41 +33,44 @@ export async function POST(req: Request) {
     rateMap.set(ip, entry)
 
     // Robustly parse body: prefer JSON, fallback to text -> JSON, then URLSearchParams (form-encoded)
-    let body: any = {}
+    let body: unknown = {}
     try {
       body = await req.json()
-    } catch (jsonErr) {
+    } catch (_jsonErr) {
       try {
         const txt = await req.text()
         // Try parsing JSON from text
         try {
           body = JSON.parse(txt)
-        } catch (e) {
+        } catch (_e) {
           // fallback to form-encoded parsing
           const params = new URLSearchParams(txt)
           body = Object.fromEntries(params.entries())
         }
-      } catch (txtErr) {
+      } catch (_txtErr) {
         body = {}
       }
     }
 
-    const { poemId: rawPoemId, parentId: rawParentId, name, email, content, hp_name } = body
+  const b = (body as Record<string, unknown>) || {}
+  const { poemId: rawPoemId, parentId: rawParentId, name, email, content, hp_name } = b
 
     // Normalize poemId when the client sends an object (e.g., comment.poem may be an object)
-    let lookupPoemId: string | number | undefined = rawPoemId as any
+    let lookupPoemId: string | number | undefined = rawPoemId as unknown as string | number | undefined
     if (lookupPoemId && typeof lookupPoemId === 'object') {
-      if ('id' in (lookupPoemId as any)) lookupPoemId = (lookupPoemId as any).id
-      else if ('_id' in (lookupPoemId as any)) lookupPoemId = (lookupPoemId as any)._id
-      else if ('slug' in (lookupPoemId as any)) lookupPoemId = (lookupPoemId as any).slug
+      const lp = lookupPoemId as unknown as Record<string, unknown>
+      if ('id' in lp) lookupPoemId = lp.id as string | number
+      else if ('_id' in lp) lookupPoemId = lp._id as string | number
+      else if ('slug' in lp) lookupPoemId = lp.slug as string
       else lookupPoemId = String(lookupPoemId)
     }
 
     // Normalize parentId similarly so we can accept parent objects
-    let parentId: string | number | null = rawParentId ?? null
+  let parentId: string | number | null = (rawParentId as unknown as string | number) ?? null
     if (parentId && typeof parentId === 'object') {
-      if ('id' in (parentId as any)) parentId = (parentId as any).id
-      else if ('_id' in (parentId as any)) parentId = (parentId as any)._id
+      const pp = parentId as unknown as Record<string, unknown>
+      if ('id' in pp) parentId = pp.id as string | number
+      else if ('_id' in pp) parentId = pp._id as string | number
       else parentId = String(parentId)
     }
     // Honeypot check: if the hidden field has a value, likely a bot — reject
@@ -73,24 +80,25 @@ export async function POST(req: Request) {
     // If poemId wasn't provided directly, try to infer it from the parent comment when replying.
     if (!lookupPoemId && parentId) {
       try {
-        const parentComment = await (payload as any).findByID({
+  const parentComment = await (payload as unknown as { findByID: (args: unknown) => Promise<unknown> }).findByID({
           collection: 'comments',
           id: parentId,
           depth: 1,
           overrideAccess: false,
         })
         if (parentComment) {
-          const p = (parentComment as any).poem
+          const p = (parentComment as unknown as Record<string, unknown>).poem
           if (p) {
             if (typeof p === 'object') {
-              lookupPoemId = p.id ?? p._id ?? p.slug
+              const pr = p as Record<string, unknown>
+              lookupPoemId = (pr.id ?? pr._id ?? pr.slug) as string | number | undefined
             } else {
-              lookupPoemId = p
+              lookupPoemId = p as string | number
             }
           }
         }
-      } catch (e) {
-        console.error('Error finding parent comment to infer poemId', e)
+      } catch (_e) {
+        console.error('Error finding parent comment to infer poemId', _e)
       }
     }
 
@@ -107,7 +115,7 @@ export async function POST(req: Request) {
 
     // Respect per-poem allowComments toggle (default: allow)
     try {
-      const poem = await (payload as any).findByID({
+  const poem = await (payload as unknown as { findByID: (args: unknown) => Promise<unknown> }).findByID({
         collection: 'poems',
         id: lookupPoemId,
         depth: 0,
@@ -117,11 +125,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Poem not found' }, { status: 404 })
       }
       // If the poem explicitly disables comments, reject the creation
-      if ((poem as any).allowComments === false) {
+      if ((poem as unknown as Record<string, unknown>).allowComments === false) {
         return NextResponse.json({ error: 'Comments disabled for this poem' }, { status: 403 })
       }
-    } catch (e) {
-      console.error('Error checking poem for comments toggle', e)
+    } catch (_e) {
+      console.error('Error checking poem for comments toggle', _e)
       // If we cannot determine, proceed conservatively (allow), but log.
     }
 
@@ -130,28 +138,29 @@ export async function POST(req: Request) {
     try {
       // Prefer numeric ID lookup to avoid findByID throwing when given a slug-like value
       if (/^\d+$/.test(String(lookupPoemId))) {
-        const maybe = await (payload as any).findByID({
+  const maybe = await (payload as unknown as { findByID: (args: unknown) => Promise<unknown> }).findByID({
           collection: 'poems',
           id: Number(lookupPoemId),
           depth: 0,
           overrideAccess: false,
         })
-        if (maybe) resolvedPoemId = (maybe as any).id
+        if (maybe) resolvedPoemId = (maybe as unknown as Record<string, unknown>).id as string | number
       }
 
       // If still not found, try searching by slug (or by string id)
       if (!resolvedPoemId) {
-        const found = await (payload as any).find({
+  const found = await (payload as unknown as { find: (args: unknown) => Promise<unknown> }).find({
           collection: 'poems',
           where: { slug: { equals: String(lookupPoemId) } },
           limit: 1,
           depth: 0,
           overrideAccess: false,
         })
-        if (found?.docs && found.docs.length > 0) resolvedPoemId = found.docs[0].id
+        if ((found as unknown as Record<string, unknown>)?.docs && (found as any).docs.length > 0)
+          resolvedPoemId = (found as any).docs[0].id
       }
-    } catch (e) {
-      console.error('Error finding poem by id/slug', e)
+    } catch (_e) {
+      console.error('Error finding poem by id/slug', _e)
     }
 
     if (!resolvedPoemId) {
@@ -165,7 +174,7 @@ export async function POST(req: Request) {
       : null
 
     // Create comment (approved defaults to false) using the resolved poem id
-    const created = await (payload as any).create({
+  const created = await (payload as unknown as { create: (args: unknown) => Promise<unknown> }).create({
       collection: 'comments',
       data: {
         poem: resolvedPoemId,
@@ -188,9 +197,9 @@ export async function POST(req: Request) {
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean)
-      if (notifyTo.length && typeof (payload as any).sendEmail === 'function') {
+    if (notifyTo.length && typeof (payload as unknown as Record<string, unknown>).sendEmail === 'function') {
         try {
-          await (payload as any).sendEmail({
+          await (payload as unknown as { sendEmail: (opts: unknown) => Promise<unknown> }).sendEmail({
             to: notifyTo,
             subject: `New comment on poem ${String(lookupPoemId)}`,
             html: `<p>New comment on poem <strong>${String(lookupPoemId)}</strong></p>
@@ -223,11 +232,11 @@ export async function POST(req: Request) {
           console.error('Failed to POST comment webhook', e)
         }
       }
-    } catch (notifyErr) {
-      console.error('Notifications failed', notifyErr)
+    } catch (_notifyErr) {
+      console.error('Notifications failed', _notifyErr)
     }
 
-    return NextResponse.json({ success: true, commentId: (created as any).id })
+  return NextResponse.json({ success: true, commentId: (created as unknown as Record<string, unknown>).id })
   } catch (err) {
     console.error('Error creating comment', err)
     return NextResponse.json({ error: 'Error creating comment' }, { status: 500 })

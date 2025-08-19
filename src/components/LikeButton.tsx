@@ -18,10 +18,11 @@ export default function LikeButton({
       const key = `liked_poem_${poemId}`
       const stored = localStorage.getItem(key)
       if (stored === '1') setPressed(true)
-    } catch (e) {
+    } catch (_ignore) {
       // ignore
     }
   }, [poemId])
+  
 
   const handleClick = async () => {
     const key = `liked_poem_${poemId}`
@@ -49,7 +50,7 @@ export default function LikeButton({
         setPressed((p) => !p)
         setLikes((l) => (willUnlike ? l + 1 : Math.max(0, l - 1)))
       }
-    } catch (err) {
+    } catch (_ignore) {
       setPressed((p) => !p)
       setLikes((l) => (willUnlike ? l + 1 : Math.max(0, l - 1)))
     }

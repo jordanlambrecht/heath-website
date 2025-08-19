@@ -62,7 +62,7 @@ export default function CommentForm({
         // Call parent callback first so parent can close/unmount this form.
         try {
           onSubmitted?.('Reply submitted — pending moderation')
-        } catch (e) {
+        } catch (_ignore) {
           // ignore
         }
         // Only update local state if still mounted (parent may have unmounted us)
@@ -75,7 +75,7 @@ export default function CommentForm({
       } else {
         if (mountedRef.current) setMessage(data?.error || 'Error submitting comment')
       }
-    } catch (err) {
+    } catch (_err) {
       setMessage('Network error')
     } finally {
       setLoading(false)

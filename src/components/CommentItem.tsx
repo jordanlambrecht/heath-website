@@ -1,6 +1,14 @@
 'use client'
 import { useState } from 'react'
 import { formatRelativeDate } from '@/utilities/formatDate'
+type CommentType = {
+  id?: string | number
+  name?: string | null
+  createdAt?: string | number | Date | null
+  content?: string
+  poem?: string | number | { id?: string | number; slug?: string }
+  parent?: string | number | { id?: string | number }
+}
 import CommentForm from './CommentForm'
 
 export default function CommentItem({
@@ -8,9 +16,9 @@ export default function CommentItem({
   allowReply = true,
   childrenComments = [],
 }: {
-  comment: any
+  comment: CommentType
   allowReply?: boolean
-  childrenComments?: any[]
+  childrenComments?: CommentType[]
 }) {
   const [replying, setReplying] = useState(false)
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null)
@@ -34,7 +42,7 @@ export default function CommentItem({
           <CommentForm
             poemId={String(
               typeof comment.poem === 'object'
-                ? (comment.poem?.id ?? comment.poem?._id ?? '')
+                ? (comment.poem?.id ?? comment.poem?.slug ?? '')
                 : comment.poem,
             )}
             parentId={String(comment.id)}
@@ -42,7 +50,7 @@ export default function CommentItem({
               // let parent close the form
               try {
                 setReplying(false)
-              } catch (e) {
+              } catch (_ignore) {
                 /* ignore */
               }
               // show transient confirmation message

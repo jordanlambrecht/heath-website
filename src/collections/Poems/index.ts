@@ -89,6 +89,8 @@ export const Poems: CollectionConfig = {
     {
       name: 'comments',
       type: 'relationship',
+      // payload collection slug typing is dynamic here; allow the cast locally
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       relationTo: 'comments' as any,
       hasMany: true,
       admin: {

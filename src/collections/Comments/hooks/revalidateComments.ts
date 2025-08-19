@@ -1,20 +1,22 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
 
-export const revalidateComments = async ({ req, doc, previousDoc }: any) => {
+export const revalidateComments = async ({ req, doc, _previousDoc }: { req: unknown; doc: unknown; _previousDoc?: unknown }) => {
   try {
+    const safe = (v: unknown) => v as Record<string, unknown>
     // doc.poem may be either an id or a relation object
-    const poemId = typeof (doc as any).poem === 'object' ? (doc as any).poem.id : (doc as any).poem
+    const poemRef = safe(doc).poem
+    const poemId = typeof poemRef === 'object' ? (poemRef as Record<string, unknown>).id : poemRef
     if (!poemId) return
 
     // We need payload to fetch poem slug
-    const payload = req.payload
+    const payload = (safe(req).payload) as any
     const poem = await payload.findByID({
       collection: 'poems',
       id: poemId,
       depth: 0,
       overrideAccess: true,
     })
-    const slug = (poem as any)?.slug
+    const slug = (poem as Record<string, unknown>)?.slug as string | undefined
     if (slug) {
       revalidatePath(`/poetry/${slug}`)
       revalidatePath('/poetry')
@@ -22,7 +24,7 @@ export const revalidateComments = async ({ req, doc, previousDoc }: any) => {
     }
     // also trigger sitemap tag
     revalidateTag('poems-sitemap')
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error revalidating comment-related pages', err)
   }
 }

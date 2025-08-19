@@ -3,9 +3,13 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import CommentItem from './CommentItem'
 
+type CommentType = {
+  id?: string | number
+}
+
 const queryComments = cache(async (poemId: string) => {
   const payload = await getPayload({ config: configPromise })
-  const res = await (payload as any).find({
+  const res = await (payload as unknown as { find: (args: unknown) => Promise<{ docs?: CommentType[] }> }).find({
     collection: 'comments',
     where: { poem: { equals: Number(poemId) } },
     depth: 1,
@@ -17,7 +21,7 @@ const queryComments = cache(async (poemId: string) => {
 })
 
 export default async function CommentList({ poemId }: { poemId: string }) {
-  const comments: any[] = await queryComments(poemId)
+  const comments: CommentType[] = await queryComments(poemId)
 
   if (!comments || comments.length === 0)
     return <div className="text-sm text-muted">No comments yet</div>
@@ -25,7 +29,7 @@ export default async function CommentList({ poemId }: { poemId: string }) {
   return (
     <div className="space-y-4">
       {comments.map((c) => (
-        <CommentItem key={c.id} comment={c} />
+        <CommentItem key={String(c.id)} comment={c} />
       ))}
     </div>
   )

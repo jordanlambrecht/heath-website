@@ -31,8 +31,15 @@ const PoemCommentsTab: React.FC<TextFieldClientProps> = () => {
         const json = await res.json()
         // The admin endpoint returns { success: true, comments: [...] }
         if (mounted) setComments(json.comments || json.docs || [])
-      } catch (e: any) {
-        if (mounted) setError(String(e.message || e))
+      } catch (_ignore) {
+        // safe extraction if the error has a message
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const maybeErr: any = _ignore
+          if (mounted) setError(String(maybeErr?.message || maybeErr))
+        } catch (_err2) {
+          if (mounted) setError('Error fetching comments')
+        }
       } finally {
         if (mounted) setLoading(false)
       }

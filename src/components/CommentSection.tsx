@@ -3,9 +3,18 @@ import React, { useEffect, useRef, useState } from 'react'
 import CommentForm from './CommentForm'
 import CommentItem from './CommentItem'
 
+type CommentType = {
+  id?: string | number
+  name?: string | null
+  createdAt?: string | number | Date | null
+  content?: string
+  poem?: string | number | { id?: string | number; slug?: string }
+  parent?: string | number | { id?: string | number }
+}
+
 export default function CommentSection({ poemId }: { poemId: string }) {
   const [loading, setLoading] = useState(true)
-  const [comments, setComments] = useState<any[] | null>(null)
+  const [comments, setComments] = useState<unknown[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -45,7 +54,7 @@ export default function CommentSection({ poemId }: { poemId: string }) {
       } else {
         setComments(data?.comments || [])
       }
-    } catch (e) {
+    } catch (_ignore) {
       setError('Network error')
       setComments([])
     } finally {
@@ -74,21 +83,22 @@ export default function CommentSection({ poemId }: { poemId: string }) {
           <div className="space-y-4">
             {(() => {
               // Build a one-level tree: top-level comments (no parent) and direct children
-              const byId = new Map<string, any>()
-              const childrenMap = new Map<string, any[]>()
-              comments.forEach((c) => {
-                const id = String(c.id)
-                byId.set(id, c)
+              const byId = new Map<string, Record<string, unknown>>()
+              const childrenMap = new Map<string, Record<string, unknown>[]>()
+              const commentList = comments as Record<string, unknown>[]
+              commentList.forEach((comment) => {
+                const id = String(comment.id)
+                byId.set(id, comment)
               })
-              comments.forEach((c) => {
-                const parent = c.parent
+              commentList.forEach((comment) => {
+                const parent = comment.parent
                 let pid: string | null = null
                 if (parent) {
-                  pid = typeof parent === 'object' ? String(parent.id || parent) : String(parent)
+                  pid = typeof parent === 'object' ? String(((parent as Record<string, unknown>).id as unknown) || parent) : String(parent)
                 }
                 if (pid) {
                   const arr = childrenMap.get(pid) || []
-                  arr.push(c)
+                  arr.push(comment)
                   childrenMap.set(pid, arr)
                 }
               })
@@ -99,17 +109,17 @@ export default function CommentSection({ poemId }: { poemId: string }) {
                   const parent = c.parent
                   const pid = parent
                     ? typeof parent === 'object'
-                      ? String(parent.id || parent)
+                      ? String(((parent as Record<string, unknown>).id as unknown) || parent)
                       : String(parent)
                     : null
                   return !pid
                 })
                 .map((c) => (
-                  <div key={String(c.id)}>
+                  <div key={String((c as Record<string, unknown>).id)}>
                     <CommentItem
-                      comment={c}
+                      comment={c as unknown as CommentType}
                       allowReply={true}
-                      childrenComments={childrenMap.get(String(c.id)) || []}
+                      childrenComments={(childrenMap.get(String((c as Record<string, unknown>).id)) as unknown as CommentType[]) || []}
                     />
                   </div>
                 ))
