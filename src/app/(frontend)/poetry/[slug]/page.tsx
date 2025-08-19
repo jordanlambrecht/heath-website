@@ -12,6 +12,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatRelativeDate } from '@/utilities/formatDate'
 import Spoiler from '@/components/Spoiler'
+import LikeButton from '@/components/LikeButton'
 
 type PoemPageProps = {
   params: Promise<{ slug: string }>
@@ -180,6 +181,11 @@ export default async function PoemPage({ params: paramsPromise }: PoemPageProps)
         )}
 
         {poem.content && <RichText data={poem.content} />}
+
+        {/* Like button */}
+        <div className="mt-6">
+          <LikeButton poemId={String((poem as any).id)} initialLikes={Number((poem as any).likes) || 0} />
+        </div>
 
         {descriptionEnabled && poem.description?.descriptionLocation === 'bottom' && (
           <DescriptionSection />

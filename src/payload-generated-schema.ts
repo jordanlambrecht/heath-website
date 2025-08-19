@@ -639,6 +639,7 @@ export const poems = pgTable(
     ).default('top'),
     description_description: varchar('description_description'),
     publishedAt: timestamp('published_at', { mode: 'string', withTimezone: true, precision: 3 }),
+    likes: numeric('likes').default('0'),
     slug: varchar('slug'),
     slugLock: boolean('slug_lock').default(true),
     updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
@@ -734,6 +735,7 @@ export const _poems_v = pgTable(
       withTimezone: true,
       precision: 3,
     }),
+    version_likes: numeric('version_likes').default('0'),
     version_slug: varchar('version_slug'),
     version_slugLock: boolean('version_slug_lock').default(true),
     version_updatedAt: timestamp('version_updated_at', {

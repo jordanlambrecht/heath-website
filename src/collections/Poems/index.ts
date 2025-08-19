@@ -52,6 +52,18 @@ export const Poems: CollectionConfig = {
       ],
     },
     ...detailsFields,
+    // Number of likes for the poem; incremented by a public endpoint
+    {
+      name: 'likes',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        position: 'sidebar',
+        readOnly: false,
+        description: 'Count of user likes. Incremented via site interactions.',
+      },
+      min: 0,
+    },
     ...slugField('title', {}, [
       { name: 'heroImage', sourceType: 'media-alt' },
       { name: 'content', sourceType: 'lexical-plain-text' },

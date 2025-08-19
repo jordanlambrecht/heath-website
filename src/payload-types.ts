@@ -312,6 +312,10 @@ export interface Poem {
   };
   publishedAt?: string | null;
   categories?: (number | Category)[] | null;
+  /**
+   * Count of user likes. Incremented via site interactions.
+   */
+  likes?: number | null;
   slug?: string | null;
   slugLock?: boolean | null;
   updatedAt: string;
@@ -911,6 +915,7 @@ export interface PoemsSelect<T extends boolean = true> {
       };
   publishedAt?: T;
   categories?: T;
+  likes?: T;
   slug?: T;
   slugLock?: T;
   updatedAt?: T;
