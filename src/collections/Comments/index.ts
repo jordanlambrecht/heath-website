@@ -30,13 +30,13 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unk
     // If moved between poems, remove from previous poem
     if (prevPoemId && String(prevPoemId) !== String(newPoemId)) {
       try {
-  const prevPoem = await payload.findByID({
+        const prevPoem = await payload.findByID({
           collection: 'poems',
           id: prevPoemId,
           depth: 0,
           overrideAccess: true,
         })
-  const prevComments = (((prevPoem as Record<string, unknown>)?.comments as unknown[]) || []).filter((id) => String(id) !== commentId)
+        const prevComments = (((prevPoem as Record<string, unknown>)?.comments as unknown[]) || []).filter((id) => String(id) !== commentId)
         await payload.update({
           collection: 'poems',
           id: prevPoemId,
@@ -51,13 +51,13 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unk
     // If there's a new poem, ensure it includes the comment id (dedupe)
     if (newPoemId) {
       try {
-  const poem = await payload.findByID({
+        const poem = await payload.findByID({
           collection: 'poems',
           id: newPoemId,
           depth: 0,
           overrideAccess: true,
         })
-  const existing = ((((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]).map((x) => String(x))
+        const existing = ((((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]).map((x) => String(x))
         if (!existing.includes(commentId)) {
           const updated = [...(((poem as Record<string, unknown>)?.comments as unknown[]) || []), commentId]
           await payload.update({
@@ -127,15 +127,17 @@ const Comments: CollectionConfig = {
     {
       name: 'poem',
       type: 'relationship',
-      // cast to any to avoid generated CollectionSlug typing issues
-      relationTo: 'poems' as any,
+  // cast to any to avoid generated CollectionSlug typing issues
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  relationTo: 'poems' as any,
       hasMany: false,
       required: true,
     },
     {
       name: 'parent',
       type: 'relationship',
-      relationTo: 'comments' as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  relationTo: 'comments' as any,
       hasMany: false,
     },
     {
@@ -148,7 +150,7 @@ const Comments: CollectionConfig = {
       type: 'text',
       required: false,
       admin: { readOnly: true },
-      //   validate: (value: any, { operation, originalDoc }: any) => {
+  //   validate: (value: unknown, { operation, originalDoc }: unknown) => {
       //     // Allow empty/null emails (commenters may choose not to provide one).
       //     if (value === null || value === undefined || String(value).trim() === '') return true
 

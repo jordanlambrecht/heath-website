@@ -156,8 +156,8 @@ export async function POST(req: Request) {
           depth: 0,
           overrideAccess: false,
         })
-        if ((found as unknown as Record<string, unknown>)?.docs && (found as any).docs.length > 0)
-          resolvedPoemId = (found as any).docs[0].id
+        if ((found as unknown as Record<string, unknown>)?.docs && ((found as unknown as Record<string, unknown>).docs as unknown[]).length > 0)
+          resolvedPoemId = (((found as unknown as Record<string, unknown>).docs as unknown[])[0] as Record<string, unknown>).id as string | number | null
       }
     } catch (_e) {
       console.error('Error finding poem by id/slug', _e)
@@ -225,7 +225,7 @@ export async function POST(req: Request) {
               name: name || null,
               email: emailTrim || null,
               content: String(content).trim(),
-              createdAt: (created as any).createdAt || new Date().toISOString(),
+              createdAt: ((created as unknown as Record<string, unknown>).createdAt as string) || new Date().toISOString(),
             }),
           })
         } catch (e) {
@@ -254,7 +254,7 @@ export async function GET(req: Request) {
     // Normalize poem id like in POST
     const poemRelation = /^\d+$/.test(String(poemId)) ? Number(poemId) : String(poemId)
 
-    const res = await (payload as any).find({
+  const res = await (payload as unknown as { find: (args: unknown) => Promise<{ docs?: unknown[] }> }).find({
       collection: 'comments',
       where: {
         poem: { equals: poemRelation },

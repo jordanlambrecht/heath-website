@@ -9,7 +9,9 @@ export const revalidateComments = async ({ req, doc, _previousDoc }: { req: unkn
     if (!poemId) return
 
     // We need payload to fetch poem slug
-    const payload = (safe(req).payload) as any
+    const payload = (safe(req).payload) as unknown as {
+      findByID: (args: unknown) => Promise<unknown>
+    }
     const poem = await payload.findByID({
       collection: 'poems',
       id: poemId,
