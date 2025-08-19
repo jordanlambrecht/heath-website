@@ -16,7 +16,7 @@ export default function PoetrySidebar({ poems }: PoetrySidebarProps) {
   return (
     <aside
       className="w-full md:w-1/4 lg:w-1/5 pr-4 md:border-r border-gray-200 dark:border-slate-700
-                 md:sticky md:top-24 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto"
+                md:sticky md:top-24 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto"
     >
       <nav>
         <ul className="space-y-2">

@@ -48,14 +48,11 @@ const queryAllPublishedPoemsForNav = cache(async () => {
   try {
     const poems = await payload.find({
       collection: 'poems',
-      depth: 0,
+      depth: 1,
       limit: 0,
-      sort: 'title',
-      where: {
-        _status: {
-          equals: 'published',
-        },
-      },
+      // Only include published poems and sort newest-first by publishedAt
+      where: { _status: { equals: 'published' } },
+      sort: '-publishedAt',
       overrideAccess: false,
       select: {
         id: true,

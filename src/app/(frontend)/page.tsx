@@ -20,10 +20,10 @@ const queryHomePageData = cache(async () => {
       collection: 'pages',
       where: {
         slug: {
-          equals: 'home', // Assuming your homepage slug in Payload is 'home'
+          equals: 'home',
         },
       },
-      depth: 1, // Adjust depth as needed for linked resources in blocks
+      depth: 1,
       draft,
       limit: 1,
       pagination: false,
@@ -42,14 +42,11 @@ const queryAllPoemsForHome = cache(async () => {
   try {
     const poems = await payload.find({
       collection: 'poems',
-      depth: 0, // We only need title and slug
+      depth: 1, // We only need title and slug
       limit: 0, // Fetch all poems
-      sort: 'title', // Or 'publishedDate' or any other preferred order
-      where: {
-        _status: {
-          equals: 'published', // Only show published poems on the homepage list
-        },
-      },
+      // Only show published poems on the homepage list and show newest first
+      where: { _status: { equals: 'published' } },
+      sort: '-publishedAt',
       overrideAccess: false,
       select: {
         id: true,
@@ -124,7 +121,8 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!homePageData) {
     return {
       title: 'Azzo Mulligan | Poet', // Default title
-      description: 'The official website of Azzo Mulligan, a contemporary poet.', // Default description
+      description:
+        'The official website of Azzo Mulligan, a contemporary poet. Or something like that.', // Default description
     }
   }
   // Use your existing generateMeta utility if it can handle PageType
