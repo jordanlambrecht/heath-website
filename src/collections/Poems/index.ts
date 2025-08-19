@@ -49,13 +49,56 @@ export const Poems: CollectionConfig = {
           label: 'Meta',
           fields: seoFields,
         },
+        {
+          label: 'Comments',
+          fields: [
+            {
+              name: 'adminComments',
+              type: 'ui',
+              admin: {
+                position: 'main',
+                components: {
+                  Field: {
+                    path: '@/components/Admin/PoemCommentsTab',
+                  },
+                },
+              },
+            },
+          ],
+        },
       ],
     },
     ...detailsFields,
+    // Number of likes for the poem; incremented by a public endpoint
+    {
+      name: 'likes',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        position: 'sidebar',
+        readOnly: false,
+        description: 'Count of user likes. Incremented via site interactions.',
+      },
+      min: 0,
+    },
     ...slugField('title', {}, [
       { name: 'heroImage', sourceType: 'media-alt' },
       { name: 'content', sourceType: 'lexical-plain-text' },
     ]),
+    // Reverse relationship: allow admin to see comments associated with a poem
+    {
+      name: 'comments',
+      type: 'relationship',
+      // payload collection slug typing is dynamic here; allow the cast locally
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      relationTo: 'comments' as any,
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Comments for this poem (managed automatically)',
+        readOnly: true,
+      },
+    },
   ],
   timestamps: true,
   hooks: {

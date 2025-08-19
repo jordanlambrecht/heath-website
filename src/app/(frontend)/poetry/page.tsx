@@ -20,7 +20,7 @@ const queryPoetryIntroPage = cache(async (slug: string) => {
           equals: 'published',
         },
       },
-      depth: 1,
+      depth: 2,
       limit: 1,
       overrideAccess: false,
     })

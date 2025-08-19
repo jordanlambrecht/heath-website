@@ -12,6 +12,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatRelativeDate } from '@/utilities/formatDate'
 import Spoiler from '@/components/Spoiler'
+import LikeButton from '@/components/LikeButton'
+import CommentSection from '@/components/CommentSection'
 
 type PoemPageProps = {
   params: Promise<{ slug: string }>
@@ -48,14 +50,11 @@ const queryAllPublishedPoemsForNav = cache(async () => {
   try {
     const poems = await payload.find({
       collection: 'poems',
-      depth: 0,
+      depth: 1,
       limit: 0,
-      sort: 'title',
-      where: {
-        _status: {
-          equals: 'published',
-        },
-      },
+      // Only include published poems and sort newest-first by publishedAt
+      where: { _status: { equals: 'published' } },
+      sort: '-publishedAt',
       overrideAccess: false,
       select: {
         id: true,
@@ -182,7 +181,26 @@ export default async function PoemPage({ params: paramsPromise }: PoemPageProps)
           <AnalysisSection />
         )}
 
-        {poem.content && <RichText data={poem.content} enableProse />}
+        {poem.content && <RichText data={poem.content} />}
+
+        {/* Like button */}
+        <div className="mt-6">
+          <LikeButton
+            poemId={String((poem as unknown as Record<string, unknown>).id)}
+            initialLikes={Number((poem as unknown as Record<string, unknown>).likes) || 0}
+          />
+        </div>
+
+        {/* Comments */}
+        {(poem as unknown as Record<string, unknown>).allowComments !== false ? (
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-3">Comments</h3>
+            {/* Lazy client that loads comments when scrolled into view */}
+            <CommentSection poemId={String((poem as unknown as Record<string, unknown>).id)} />
+          </div>
+        ) : (
+          <div className="mt-8 text-sm text-muted">Comments are disabled for this poem.</div>
+        )}
 
         {descriptionEnabled && poem.description?.descriptionLocation === 'bottom' && (
           <DescriptionSection />

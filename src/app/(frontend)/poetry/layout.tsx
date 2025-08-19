@@ -12,7 +12,11 @@ const queryAllPoems = cache(async () => {
       depth: 1,
       limit: 0,
       overrideAccess: false,
-      sort: 'title',
+      // Only show published poems in the sidebar and order by published date (newest first)
+      where: {
+        _status: { equals: 'published' },
+      },
+      sort: '-publishedAt',
       select: {
         id: true,
         title: true,
