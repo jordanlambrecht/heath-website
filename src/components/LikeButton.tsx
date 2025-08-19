@@ -22,7 +22,6 @@ export default function LikeButton({
       // ignore
     }
   }, [poemId])
-  
 
   const handleClick = async () => {
     const key = `liked_poem_${poemId}`

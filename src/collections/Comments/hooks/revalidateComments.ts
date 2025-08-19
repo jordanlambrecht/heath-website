@@ -1,6 +1,14 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
 
-export const revalidateComments = async ({ req, doc, _previousDoc }: { req: unknown; doc: unknown; _previousDoc?: unknown }) => {
+export const revalidateComments = async ({
+  req,
+  doc,
+  _previousDoc,
+}: {
+  req: unknown
+  doc: unknown
+  _previousDoc?: unknown
+}) => {
   try {
     const safe = (v: unknown) => v as Record<string, unknown>
     // doc.poem may be either an id or a relation object
@@ -9,7 +17,7 @@ export const revalidateComments = async ({ req, doc, _previousDoc }: { req: unkn
     if (!poemId) return
 
     // We need payload to fetch poem slug
-    const payload = (safe(req).payload) as unknown as {
+    const payload = safe(req).payload as unknown as {
       findByID: (args: unknown) => Promise<unknown>
     }
     const poem = await payload.findByID({

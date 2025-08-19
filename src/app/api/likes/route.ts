@@ -11,9 +11,9 @@ async function getPool() {
   if (global.__payload_pg_pool) return global.__payload_pg_pool
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) return null
-    // dynamic import to avoid requiring 'pg' types at build time
-    // @ts-expect-error - 'pg' may not have types installed in this environment; handle missing module at runtime
-    const pgModule = await import('pg').catch(() => null)
+  // dynamic import to avoid requiring 'pg' types at build time
+  // @ts-expect-error - 'pg' may not have types installed in this environment; handle missing module at runtime
+  const pgModule = await import('pg').catch(() => null)
   if (!pgModule) return null
   const { Pool } = pgModule
   const pool = new Pool({ connectionString })
@@ -33,14 +33,18 @@ export async function POST(req: Request) {
     // global map of ip -> { count, windowStart }
     ;(global as unknown as Record<string, unknown>).__likes_rate_limits =
       (global as unknown as Record<string, unknown>).__likes_rate_limits || new Map()
-    const rateMap: Map<string, { count: number; windowStart: number }> =
-      ((global as unknown as Record<string, unknown>).__likes_rate_limits as unknown) as Map<string, {
+    const rateMap: Map<string, { count: number; windowStart: number }> = (
+      global as unknown as Record<string, unknown>
+    ).__likes_rate_limits as unknown as Map<
+      string,
+      {
         count: number
         windowStart: number
-      }>
+      }
+    >
     // determine client IP from headers (behind proxies or Vercel) or fallback
-  const forwardedFor: string = (req.headers.get('x-forwarded-for') || '') as string
-  const realIp: string = (req.headers.get('x-real-ip') || '') as string
+    const forwardedFor: string = (req.headers.get('x-forwarded-for') || '') as string
+    const realIp: string = (req.headers.get('x-real-ip') || '') as string
     const firstForward = (forwardedFor.split(',')[0] ?? '').trim()
     const ip = firstForward || realIp || 'local'
     const now = Date.now()
@@ -55,8 +59,8 @@ export async function POST(req: Request) {
     entry.count += 1
     rateMap.set(ip, entry)
 
-  const body = (await req.json()) as unknown
-  const { poemId, action } = (body as Record<string, unknown>) || {}
+    const body = (await req.json()) as unknown
+    const { poemId, action } = (body as Record<string, unknown>) || {}
     if (!poemId) return NextResponse.json({ error: 'Missing poemId' }, { status: 400 })
     const act = action === 'unlike' ? 'unlike' : 'like'
     // normalize poemId into a string|number for downstream calls
@@ -72,7 +76,10 @@ export async function POST(req: Request) {
       const whereClause = isNumericId ? 'id = $2::int' : 'slug = $2'
       // Use GREATEST to prevent negative counts
       const sql = `UPDATE poems SET likes = GREATEST(likes + $1, 0) WHERE ${whereClause} RETURNING likes`
-  const result = await pool.query(sql, [delta, isNumericId ? Number(poemIdParam) : String(poemIdParam)])
+      const result = await pool.query(sql, [
+        delta,
+        isNumericId ? Number(poemIdParam) : String(poemIdParam),
+      ])
       if (result && result.rows && result.rows[0]) {
         // pg may return numeric as string — coerce to number
         const likes = Number(result.rows[0].likes)
@@ -90,11 +97,14 @@ export async function POST(req: Request) {
         depth: 0,
         overrideAccess: true,
       })
-      const currentLikes = ((existing as unknown) as Record<string, unknown>)?.likes as number | undefined
-      const currentLikesNum = typeof currentLikes === 'number' ? currentLikes : Number(currentLikes) || 0
+      const currentLikes = (existing as unknown as Record<string, unknown>)?.likes as
+        | number
+        | undefined
+      const currentLikesNum =
+        typeof currentLikes === 'number' ? currentLikes : Number(currentLikes) || 0
       const newLikes = act === 'like' ? currentLikesNum + 1 : Math.max(0, currentLikesNum - 1)
       // use unknown cast to update without broad any
-  await (payload as unknown as { update: (args: unknown) => Promise<unknown> }).update({
+      await (payload as unknown as { update: (args: unknown) => Promise<unknown> }).update({
         collection: 'poems',
         id: poemIdParam,
         data: { likes: newLikes },
@@ -104,7 +114,10 @@ export async function POST(req: Request) {
     } catch (e: unknown) {
       // If payload couldn't find the document, return 404 to the client
       const err = e as Record<string, unknown>
-      if (err && ((err.status as number) === 404 || /Not Found/i.test(String((err.message as string) || '')))) {
+      if (
+        err &&
+        ((err.status as number) === 404 || /Not Found/i.test(String((err.message as string) || '')))
+      ) {
         return NextResponse.json({ error: 'Poem not found' }, { status: 404 })
       }
       // rethrow to be handled by outer catch

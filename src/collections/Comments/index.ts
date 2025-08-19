@@ -2,7 +2,15 @@ import type { CollectionConfig } from 'payload'
 import { revalidateComments } from './hooks/revalidateComments'
 
 // Sync poem.comments on create/update
-const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unknown; doc: unknown; previousDoc?: unknown }) => {
+const syncPoemCommentsAfterChange = async ({
+  req,
+  doc,
+  previousDoc,
+}: {
+  req: unknown
+  doc: unknown
+  previousDoc?: unknown
+}) => {
   const safe = (v: unknown) => v as Record<string, unknown>
   try {
     const reqObj = safe(req)
@@ -10,7 +18,7 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unk
       findByID: (args: unknown) => Promise<unknown>
       update: (args: unknown) => Promise<unknown>
     }
-    const commentId = String((safe(doc).id ?? safe(doc)._id) ?? '')
+    const commentId = String(safe(doc).id ?? safe(doc)._id ?? '')
 
     const extractId = (ref: unknown) => {
       if (!ref) return null
@@ -36,7 +44,9 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unk
           depth: 0,
           overrideAccess: true,
         })
-        const prevComments = (((prevPoem as Record<string, unknown>)?.comments as unknown[]) || []).filter((id) => String(id) !== commentId)
+        const prevComments = (
+          ((prevPoem as Record<string, unknown>)?.comments as unknown[]) || []
+        ).filter((id) => String(id) !== commentId)
         await payload.update({
           collection: 'poems',
           id: prevPoemId,
@@ -57,9 +67,14 @@ const syncPoemCommentsAfterChange = async ({ req, doc, previousDoc }: { req: unk
           depth: 0,
           overrideAccess: true,
         })
-        const existing = ((((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]).map((x) => String(x))
+        const existing = (
+          (((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]
+        ).map((x) => String(x))
         if (!existing.includes(commentId)) {
-          const updated = [...(((poem as Record<string, unknown>)?.comments as unknown[]) || []), commentId]
+          const updated = [
+            ...(((poem as Record<string, unknown>)?.comments as unknown[]) || []),
+            commentId,
+          ]
           await payload.update({
             collection: 'poems',
             id: newPoemId,
@@ -84,9 +99,14 @@ const removeCommentFromPoemAfterDelete = async ({ req, doc }: { req: unknown; do
       findByID: (args: unknown) => Promise<unknown>
       update: (args: unknown) => Promise<unknown>
     }
-    const commentId = String((safe(doc).id ?? safe(doc)._id) ?? '')
-  const poemRef = safe(doc).poem
-  const poemId = poemRef && typeof poemRef === 'object' ? ((poemRef as Record<string, unknown>).id ?? (poemRef as Record<string, unknown>)._id ?? null) : poemRef
+    const commentId = String(safe(doc).id ?? safe(doc)._id ?? '')
+    const poemRef = safe(doc).poem
+    const poemId =
+      poemRef && typeof poemRef === 'object'
+        ? ((poemRef as Record<string, unknown>).id ??
+          (poemRef as Record<string, unknown>)._id ??
+          null)
+        : poemRef
     if (!poemId) return
     try {
       const poem = await payload.findByID({
@@ -95,7 +115,9 @@ const removeCommentFromPoemAfterDelete = async ({ req, doc }: { req: unknown; do
         depth: 0,
         overrideAccess: true,
       })
-  const remaining = ((((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]).filter((id) => String(id) !== commentId)
+      const remaining = (
+        (((poem as Record<string, unknown>)?.comments as unknown[]) || []) as unknown[]
+      ).filter((id) => String(id) !== commentId)
       await payload.update({
         collection: 'poems',
         id: poemId,
@@ -127,17 +149,17 @@ const Comments: CollectionConfig = {
     {
       name: 'poem',
       type: 'relationship',
-  // cast to any to avoid generated CollectionSlug typing issues
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  relationTo: 'poems' as any,
+      // cast to any to avoid generated CollectionSlug typing issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      relationTo: 'poems' as any,
       hasMany: false,
       required: true,
     },
     {
       name: 'parent',
       type: 'relationship',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  relationTo: 'comments' as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      relationTo: 'comments' as any,
       hasMany: false,
     },
     {
@@ -150,7 +172,7 @@ const Comments: CollectionConfig = {
       type: 'text',
       required: false,
       admin: { readOnly: true },
-  //   validate: (value: unknown, { operation, originalDoc }: unknown) => {
+      //   validate: (value: unknown, { operation, originalDoc }: unknown) => {
       //     // Allow empty/null emails (commenters may choose not to provide one).
       //     if (value === null || value === undefined || String(value).trim() === '') return true
 

@@ -192,11 +192,11 @@ export default async function PoemPage({ params: paramsPromise }: PoemPageProps)
         </div>
 
         {/* Comments */}
-    {((poem as unknown as Record<string, unknown>).allowComments !== false) ? (
+        {(poem as unknown as Record<string, unknown>).allowComments !== false ? (
           <div className="mt-8">
             <h3 className="text-xl font-semibold mb-3">Comments</h3>
             {/* Lazy client that loads comments when scrolled into view */}
-      <CommentSection poemId={String((poem as unknown as Record<string, unknown>).id)} />
+            <CommentSection poemId={String((poem as unknown as Record<string, unknown>).id)} />
           </div>
         ) : (
           <div className="mt-8 text-sm text-muted">Comments are disabled for this poem.</div>

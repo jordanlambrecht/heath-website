@@ -28,9 +28,11 @@ export async function POST(req: Request) {
 
     while (true) {
       // payload.find returns { docs, totalDocs, limit, page } shape
-      const res: PayloadFindResult = await (payload as unknown as {
-        find: (args: unknown) => Promise<PayloadFindResult>
-      }).find({
+      const res: PayloadFindResult = await (
+        payload as unknown as {
+          find: (args: unknown) => Promise<PayloadFindResult>
+        }
+      ).find({
         collection: 'comments',
         limit,
         page,
@@ -49,7 +51,9 @@ export async function POST(req: Request) {
       const poemRef = comment?.poem
       const poemId = poemRef
         ? typeof poemRef === 'object'
-          ? ((poemRef as Record<string, unknown>).id ?? (poemRef as Record<string, unknown>)._id ?? null)
+          ? ((poemRef as Record<string, unknown>).id ??
+            (poemRef as Record<string, unknown>)._id ??
+            null)
           : poemRef
         : null
       const commentId = comment?.id ?? comment?._id
@@ -60,12 +64,12 @@ export async function POST(req: Request) {
       map.set(key, arr)
     }
 
-  let poemsUpdated = 0
-  const errors: Array<Record<string, unknown>> = []
+    let poemsUpdated = 0
+    const errors: Array<Record<string, unknown>> = []
     for (const [poemId, ids] of map.entries()) {
       const uniq = Array.from(new Set(ids))
       try {
-  await (payload as unknown as { update: (args: unknown) => Promise<unknown> }).update({
+        await (payload as unknown as { update: (args: unknown) => Promise<unknown> }).update({
           collection: 'poems',
           id: poemId,
           data: { comments: uniq },
@@ -73,7 +77,7 @@ export async function POST(req: Request) {
         })
         poemsUpdated += 1
       } catch (e) {
-    errors.push({ poemId, error: String(e) })
+        errors.push({ poemId, error: String(e) })
       }
     }
 

@@ -11,11 +11,15 @@ export async function POST(req: Request) {
     const RATE_WINDOW_MS = 60_000
     ;(global as unknown as Record<string, unknown>).__comments_rate_limits =
       (global as unknown as Record<string, unknown>).__comments_rate_limits || new Map()
-    const rateMap: Map<string, { count: number; windowStart: number }> =
-      ((global as unknown as Record<string, unknown>).__comments_rate_limits as unknown) as Map<string, {
+    const rateMap: Map<string, { count: number; windowStart: number }> = (
+      global as unknown as Record<string, unknown>
+    ).__comments_rate_limits as unknown as Map<
+      string,
+      {
         count: number
         windowStart: number
-      }>
+      }
+    >
     const forwardedFor: string = (req.headers.get('x-forwarded-for') || '') as string
     const realIp: string = (req.headers.get('x-real-ip') || '') as string
     const firstForward = (forwardedFor.split(',')[0] ?? '').trim()
@@ -52,11 +56,14 @@ export async function POST(req: Request) {
       }
     }
 
-  const b = (body as Record<string, unknown>) || {}
-  const { poemId: rawPoemId, parentId: rawParentId, name, email, content, hp_name } = b
+    const b = (body as Record<string, unknown>) || {}
+    const { poemId: rawPoemId, parentId: rawParentId, name, email, content, hp_name } = b
 
     // Normalize poemId when the client sends an object (e.g., comment.poem may be an object)
-    let lookupPoemId: string | number | undefined = rawPoemId as unknown as string | number | undefined
+    let lookupPoemId: string | number | undefined = rawPoemId as unknown as
+      | string
+      | number
+      | undefined
     if (lookupPoemId && typeof lookupPoemId === 'object') {
       const lp = lookupPoemId as unknown as Record<string, unknown>
       if ('id' in lp) lookupPoemId = lp.id as string | number
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
     }
 
     // Normalize parentId similarly so we can accept parent objects
-  let parentId: string | number | null = (rawParentId as unknown as string | number) ?? null
+    let parentId: string | number | null = (rawParentId as unknown as string | number) ?? null
     if (parentId && typeof parentId === 'object') {
       const pp = parentId as unknown as Record<string, unknown>
       if ('id' in pp) parentId = pp.id as string | number
@@ -80,7 +87,9 @@ export async function POST(req: Request) {
     // If poemId wasn't provided directly, try to infer it from the parent comment when replying.
     if (!lookupPoemId && parentId) {
       try {
-  const parentComment = await (payload as unknown as { findByID: (args: unknown) => Promise<unknown> }).findByID({
+        const parentComment = await (
+          payload as unknown as { findByID: (args: unknown) => Promise<unknown> }
+        ).findByID({
           collection: 'comments',
           id: parentId,
           depth: 1,
@@ -115,7 +124,9 @@ export async function POST(req: Request) {
 
     // Respect per-poem allowComments toggle (default: allow)
     try {
-  const poem = await (payload as unknown as { findByID: (args: unknown) => Promise<unknown> }).findByID({
+      const poem = await (
+        payload as unknown as { findByID: (args: unknown) => Promise<unknown> }
+      ).findByID({
         collection: 'poems',
         id: lookupPoemId,
         depth: 0,
@@ -138,26 +149,39 @@ export async function POST(req: Request) {
     try {
       // Prefer numeric ID lookup to avoid findByID throwing when given a slug-like value
       if (/^\d+$/.test(String(lookupPoemId))) {
-  const maybe = await (payload as unknown as { findByID: (args: unknown) => Promise<unknown> }).findByID({
+        const maybe = await (
+          payload as unknown as { findByID: (args: unknown) => Promise<unknown> }
+        ).findByID({
           collection: 'poems',
           id: Number(lookupPoemId),
           depth: 0,
           overrideAccess: false,
         })
-        if (maybe) resolvedPoemId = (maybe as unknown as Record<string, unknown>).id as string | number
+        if (maybe)
+          resolvedPoemId = (maybe as unknown as Record<string, unknown>).id as string | number
       }
 
       // If still not found, try searching by slug (or by string id)
       if (!resolvedPoemId) {
-  const found = await (payload as unknown as { find: (args: unknown) => Promise<unknown> }).find({
+        const found = await (
+          payload as unknown as { find: (args: unknown) => Promise<unknown> }
+        ).find({
           collection: 'poems',
           where: { slug: { equals: String(lookupPoemId) } },
           limit: 1,
           depth: 0,
           overrideAccess: false,
         })
-        if ((found as unknown as Record<string, unknown>)?.docs && ((found as unknown as Record<string, unknown>).docs as unknown[]).length > 0)
-          resolvedPoemId = (((found as unknown as Record<string, unknown>).docs as unknown[])[0] as Record<string, unknown>).id as string | number | null
+        if (
+          (found as unknown as Record<string, unknown>)?.docs &&
+          ((found as unknown as Record<string, unknown>).docs as unknown[]).length > 0
+        )
+          resolvedPoemId = (
+            ((found as unknown as Record<string, unknown>).docs as unknown[])[0] as Record<
+              string,
+              unknown
+            >
+          ).id as string | number | null
       }
     } catch (_e) {
       console.error('Error finding poem by id/slug', _e)
@@ -174,7 +198,9 @@ export async function POST(req: Request) {
       : null
 
     // Create comment (approved defaults to false) using the resolved poem id
-  const created = await (payload as unknown as { create: (args: unknown) => Promise<unknown> }).create({
+    const created = await (
+      payload as unknown as { create: (args: unknown) => Promise<unknown> }
+    ).create({
       collection: 'comments',
       data: {
         poem: resolvedPoemId,
@@ -197,9 +223,14 @@ export async function POST(req: Request) {
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean)
-    if (notifyTo.length && typeof (payload as unknown as Record<string, unknown>).sendEmail === 'function') {
+      if (
+        notifyTo.length &&
+        typeof (payload as unknown as Record<string, unknown>).sendEmail === 'function'
+      ) {
         try {
-          await (payload as unknown as { sendEmail: (opts: unknown) => Promise<unknown> }).sendEmail({
+          await (
+            payload as unknown as { sendEmail: (opts: unknown) => Promise<unknown> }
+          ).sendEmail({
             to: notifyTo,
             subject: `New comment on poem ${String(lookupPoemId)}`,
             html: `<p>New comment on poem <strong>${String(lookupPoemId)}</strong></p>
@@ -225,7 +256,9 @@ export async function POST(req: Request) {
               name: name || null,
               email: emailTrim || null,
               content: String(content).trim(),
-              createdAt: ((created as unknown as Record<string, unknown>).createdAt as string) || new Date().toISOString(),
+              createdAt:
+                ((created as unknown as Record<string, unknown>).createdAt as string) ||
+                new Date().toISOString(),
             }),
           })
         } catch (e) {
@@ -236,7 +269,10 @@ export async function POST(req: Request) {
       console.error('Notifications failed', _notifyErr)
     }
 
-  return NextResponse.json({ success: true, commentId: (created as unknown as Record<string, unknown>).id })
+    return NextResponse.json({
+      success: true,
+      commentId: (created as unknown as Record<string, unknown>).id,
+    })
   } catch (err) {
     console.error('Error creating comment', err)
     return NextResponse.json({ error: 'Error creating comment' }, { status: 500 })
@@ -254,7 +290,9 @@ export async function GET(req: Request) {
     // Normalize poem id like in POST
     const poemRelation = /^\d+$/.test(String(poemId)) ? Number(poemId) : String(poemId)
 
-  const res = await (payload as unknown as { find: (args: unknown) => Promise<{ docs?: unknown[] }> }).find({
+    const res = await (
+      payload as unknown as { find: (args: unknown) => Promise<{ docs?: unknown[] }> }
+    ).find({
       collection: 'comments',
       where: {
         poem: { equals: poemRelation },

@@ -9,7 +9,9 @@ type CommentType = {
 
 const queryComments = cache(async (poemId: string) => {
   const payload = await getPayload({ config: configPromise })
-  const res = await (payload as unknown as { find: (args: unknown) => Promise<{ docs?: CommentType[] }> }).find({
+  const res = await (
+    payload as unknown as { find: (args: unknown) => Promise<{ docs?: CommentType[] }> }
+  ).find({
     collection: 'comments',
     where: { poem: { equals: Number(poemId) } },
     depth: 1,

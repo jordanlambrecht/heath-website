@@ -94,7 +94,10 @@ export default function CommentSection({ poemId }: { poemId: string }) {
                 const parent = comment.parent
                 let pid: string | null = null
                 if (parent) {
-                  pid = typeof parent === 'object' ? String(((parent as Record<string, unknown>).id as unknown) || parent) : String(parent)
+                  pid =
+                    typeof parent === 'object'
+                      ? String(((parent as Record<string, unknown>).id as unknown) || parent)
+                      : String(parent)
                 }
                 if (pid) {
                   const arr = childrenMap.get(pid) || []
@@ -119,7 +122,11 @@ export default function CommentSection({ poemId }: { poemId: string }) {
                     <CommentItem
                       comment={c as unknown as CommentType}
                       allowReply={true}
-                      childrenComments={(childrenMap.get(String((c as Record<string, unknown>).id)) as unknown as CommentType[]) || []}
+                      childrenComments={
+                        (childrenMap.get(
+                          String((c as Record<string, unknown>).id),
+                        ) as unknown as CommentType[]) || []
+                      }
                     />
                   </div>
                 ))
