@@ -82,6 +82,15 @@ export const detailsFields: Field[] = [
     },
   },
   {
+    name: 'allowComments',
+    type: 'checkbox',
+    admin: {
+      position: 'sidebar',
+      description: 'Toggle to allow or disable comments for this poem',
+    },
+    defaultValue: true,
+  },
+  {
     name: 'categories',
     type: 'relationship',
     admin: {

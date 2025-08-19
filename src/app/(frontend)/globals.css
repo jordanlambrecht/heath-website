@@ -105,6 +105,9 @@
   body {
     @apply bg-background text-foreground min-h-screen flex flex-col;
   }
+  button {
+    @apply cursor-pointer;
+  }
 }
 
 html {

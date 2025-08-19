@@ -72,6 +72,7 @@ export interface Config {
     categories: Category;
     users: User;
     poems: Poem;
+    comments: Comment;
     redirects: Redirect;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -85,6 +86,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     poems: PoemsSelect<false> | PoemsSelect<true>;
+    comments: CommentsSelect<false> | CommentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -311,6 +313,10 @@ export interface Poem {
     description?: string | null;
   };
   publishedAt?: string | null;
+  /**
+   * Toggle to allow or disable comments for this poem
+   */
+  allowComments?: boolean | null;
   categories?: (number | Category)[] | null;
   /**
    * Count of user likes. Incremented via site interactions.
@@ -318,6 +324,10 @@ export interface Poem {
   likes?: number | null;
   slug?: string | null;
   slugLock?: boolean | null;
+  /**
+   * Comments for this poem (managed automatically)
+   */
+  comments?: (number | Comment)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -432,6 +442,24 @@ export interface Category {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comments".
+ */
+export interface Comment {
+  id: number;
+  poem: number | Poem;
+  parent?: (number | null) | Comment;
+  name?: string | null;
+  email?: string | null;
+  content: string;
+  /**
+   * Set to true to publish comment
+   */
+  approved?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -622,6 +650,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'poems';
         value: number | Poem;
+      } | null)
+    | ({
+        relationTo: 'comments';
+        value: number | Comment;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -914,13 +946,29 @@ export interface PoemsSelect<T extends boolean = true> {
         description?: T;
       };
   publishedAt?: T;
+  allowComments?: T;
   categories?: T;
   likes?: T;
   slug?: T;
   slugLock?: T;
+  comments?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comments_select".
+ */
+export interface CommentsSelect<T extends boolean = true> {
+  poem?: T;
+  parent?: T;
+  name?: T;
+  email?: T;
+  content?: T;
+  approved?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

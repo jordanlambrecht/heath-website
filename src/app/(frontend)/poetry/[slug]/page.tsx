@@ -13,6 +13,7 @@ import Image from 'next/image'
 import { formatRelativeDate } from '@/utilities/formatDate'
 import Spoiler from '@/components/Spoiler'
 import LikeButton from '@/components/LikeButton'
+import CommentSection from '@/components/CommentSection'
 
 type PoemPageProps = {
   params: Promise<{ slug: string }>
@@ -184,8 +185,22 @@ export default async function PoemPage({ params: paramsPromise }: PoemPageProps)
 
         {/* Like button */}
         <div className="mt-6">
-          <LikeButton poemId={String((poem as any).id)} initialLikes={Number((poem as any).likes) || 0} />
+          <LikeButton
+            poemId={String((poem as any).id)}
+            initialLikes={Number((poem as any).likes) || 0}
+          />
         </div>
+
+        {/* Comments */}
+        {(poem as any).allowComments !== false ? (
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-3">Comments</h3>
+            {/* Lazy client that loads comments when scrolled into view */}
+            <CommentSection poemId={String((poem as any).id)} />
+          </div>
+        ) : (
+          <div className="mt-8 text-sm text-muted">Comments are disabled for this poem.</div>
+        )}
 
         {descriptionEnabled && poem.description?.descriptionLocation === 'bottom' && (
           <DescriptionSection />

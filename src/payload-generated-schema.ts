@@ -639,6 +639,7 @@ export const poems = pgTable(
     ).default('top'),
     description_description: varchar('description_description'),
     publishedAt: timestamp('published_at', { mode: 'string', withTimezone: true, precision: 3 }),
+    allowComments: boolean('allow_comments').default(true),
     likes: numeric('likes').default('0'),
     slug: varchar('slug'),
     slugLock: boolean('slug_lock').default(true),
@@ -668,12 +669,14 @@ export const poems_rels = pgTable(
     parent: integer('parent_id').notNull(),
     path: varchar('path').notNull(),
     categoriesID: integer('categories_id'),
+    commentsID: integer('comments_id'),
   },
   (columns) => ({
     order: index('poems_rels_order_idx').on(columns.order),
     parentIdx: index('poems_rels_parent_idx').on(columns.parent),
     pathIdx: index('poems_rels_path_idx').on(columns.path),
     poems_rels_categories_id_idx: index('poems_rels_categories_id_idx').on(columns.categoriesID),
+    poems_rels_comments_id_idx: index('poems_rels_comments_id_idx').on(columns.commentsID),
     parentFk: foreignKey({
       columns: [columns['parent']],
       foreignColumns: [poems.id],
@@ -683,6 +686,11 @@ export const poems_rels = pgTable(
       columns: [columns['categoriesID']],
       foreignColumns: [categories.id],
       name: 'poems_rels_categories_fk',
+    }).onDelete('cascade'),
+    commentsIdFk: foreignKey({
+      columns: [columns['commentsID']],
+      foreignColumns: [comments.id],
+      name: 'poems_rels_comments_fk',
     }).onDelete('cascade'),
   }),
 )
@@ -735,6 +743,7 @@ export const _poems_v = pgTable(
       withTimezone: true,
       precision: 3,
     }),
+    version_allowComments: boolean('version_allow_comments').default(true),
     version_likes: numeric('version_likes').default('0'),
     version_slug: varchar('version_slug'),
     version_slugLock: boolean('version_slug_lock').default(true),
@@ -793,6 +802,7 @@ export const _poems_v_rels = pgTable(
     parent: integer('parent_id').notNull(),
     path: varchar('path').notNull(),
     categoriesID: integer('categories_id'),
+    commentsID: integer('comments_id'),
   },
   (columns) => ({
     order: index('_poems_v_rels_order_idx').on(columns.order),
@@ -801,6 +811,7 @@ export const _poems_v_rels = pgTable(
     _poems_v_rels_categories_id_idx: index('_poems_v_rels_categories_id_idx').on(
       columns.categoriesID,
     ),
+    _poems_v_rels_comments_id_idx: index('_poems_v_rels_comments_id_idx').on(columns.commentsID),
     parentFk: foreignKey({
       columns: [columns['parent']],
       foreignColumns: [_poems_v.id],
@@ -811,6 +822,42 @@ export const _poems_v_rels = pgTable(
       foreignColumns: [categories.id],
       name: '_poems_v_rels_categories_fk',
     }).onDelete('cascade'),
+    commentsIdFk: foreignKey({
+      columns: [columns['commentsID']],
+      foreignColumns: [comments.id],
+      name: '_poems_v_rels_comments_fk',
+    }).onDelete('cascade'),
+  }),
+)
+
+export const comments = pgTable(
+  'comments',
+  {
+    id: serial('id').primaryKey(),
+    poem: integer('poem_id')
+      .notNull()
+      .references(() => poems.id, {
+        onDelete: 'set null',
+      }),
+    parent: integer('parent_id').references((): AnyPgColumn => comments.id, {
+      onDelete: 'set null',
+    }),
+    name: varchar('name'),
+    email: varchar('email'),
+    content: varchar('content').notNull(),
+    approved: boolean('approved').default(false),
+    updatedAt: timestamp('updated_at', { mode: 'string', withTimezone: true, precision: 3 })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp('created_at', { mode: 'string', withTimezone: true, precision: 3 })
+      .defaultNow()
+      .notNull(),
+  },
+  (columns) => ({
+    comments_poem_idx: index('comments_poem_idx').on(columns.poem),
+    comments_parent_idx: index('comments_parent_idx').on(columns.parent),
+    comments_updated_at_idx: index('comments_updated_at_idx').on(columns.updatedAt),
+    comments_created_at_idx: index('comments_created_at_idx').on(columns.createdAt),
   }),
 )
 
@@ -974,6 +1021,7 @@ export const payload_locked_documents_rels = pgTable(
     categoriesID: integer('categories_id'),
     usersID: integer('users_id'),
     poemsID: integer('poems_id'),
+    commentsID: integer('comments_id'),
     redirectsID: integer('redirects_id'),
     'payload-jobsID': integer('payload_jobs_id'),
   },
@@ -996,6 +1044,9 @@ export const payload_locked_documents_rels = pgTable(
     payload_locked_documents_rels_poems_id_idx: index(
       'payload_locked_documents_rels_poems_id_idx',
     ).on(columns.poemsID),
+    payload_locked_documents_rels_comments_id_idx: index(
+      'payload_locked_documents_rels_comments_id_idx',
+    ).on(columns.commentsID),
     payload_locked_documents_rels_redirects_id_idx: index(
       'payload_locked_documents_rels_redirects_id_idx',
     ).on(columns.redirectsID),
@@ -1031,6 +1082,11 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['poemsID']],
       foreignColumns: [poems.id],
       name: 'payload_locked_documents_rels_poems_fk',
+    }).onDelete('cascade'),
+    commentsIdFk: foreignKey({
+      columns: [columns['commentsID']],
+      foreignColumns: [comments.id],
+      name: 'payload_locked_documents_rels_comments_fk',
     }).onDelete('cascade'),
     redirectsIdFk: foreignKey({
       columns: [columns['redirectsID']],
@@ -1316,6 +1372,11 @@ export const relations_poems_rels = relations(poems_rels, ({ one }) => ({
     references: [categories.id],
     relationName: 'categories',
   }),
+  commentsID: one(comments, {
+    fields: [poems_rels.commentsID],
+    references: [comments.id],
+    relationName: 'comments',
+  }),
 }))
 export const relations_poems = relations(poems, ({ one, many }) => ({
   heroImage: one(media, {
@@ -1343,6 +1404,11 @@ export const relations__poems_v_rels = relations(_poems_v_rels, ({ one }) => ({
     references: [categories.id],
     relationName: 'categories',
   }),
+  commentsID: one(comments, {
+    fields: [_poems_v_rels.commentsID],
+    references: [comments.id],
+    relationName: 'comments',
+  }),
 }))
 export const relations__poems_v = relations(_poems_v, ({ one, many }) => ({
   parent: one(poems, {
@@ -1362,6 +1428,18 @@ export const relations__poems_v = relations(_poems_v, ({ one, many }) => ({
   }),
   _rels: many(_poems_v_rels, {
     relationName: '_rels',
+  }),
+}))
+export const relations_comments = relations(comments, ({ one }) => ({
+  poem: one(poems, {
+    fields: [comments.poem],
+    references: [poems.id],
+    relationName: 'poem',
+  }),
+  parent: one(comments, {
+    fields: [comments.parent],
+    references: [comments.id],
+    relationName: 'parent',
   }),
 }))
 export const relations_redirects_rels = relations(redirects_rels, ({ one }) => ({
@@ -1430,6 +1508,11 @@ export const relations_payload_locked_documents_rels = relations(
       fields: [payload_locked_documents_rels.poemsID],
       references: [poems.id],
       relationName: 'poems',
+    }),
+    commentsID: one(comments, {
+      fields: [payload_locked_documents_rels.commentsID],
+      references: [comments.id],
+      relationName: 'comments',
     }),
     redirectsID: one(redirects, {
       fields: [payload_locked_documents_rels.redirectsID],
@@ -1512,6 +1595,7 @@ type DatabaseSchema = {
   poems_rels: typeof poems_rels
   _poems_v: typeof _poems_v
   _poems_v_rels: typeof _poems_v_rels
+  comments: typeof comments
   redirects: typeof redirects
   redirects_rels: typeof redirects_rels
   payload_jobs_log: typeof payload_jobs_log
@@ -1540,6 +1624,7 @@ type DatabaseSchema = {
   relations_poems: typeof relations_poems
   relations__poems_v_rels: typeof relations__poems_v_rels
   relations__poems_v: typeof relations__poems_v
+  relations_comments: typeof relations_comments
   relations_redirects_rels: typeof relations_redirects_rels
   relations_redirects: typeof relations_redirects
   relations_payload_jobs_log: typeof relations_payload_jobs_log
