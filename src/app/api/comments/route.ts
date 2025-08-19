@@ -237,9 +237,7 @@ export async function POST(req: Request) {
 
       // Fallback to env var or SMTP from address when no users found
       if (!notifyTo.length) {
-        notifyTo = (
-          process.env.COMMENT_NOTIFICATION_EMAILS || process.env.SMTP_FROM_ADDRESS || ''
-        )
+        notifyTo = (process.env.COMMENT_NOTIFICATION_EMAILS || process.env.SMTP_FROM_ADDRESS || '')
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean)
