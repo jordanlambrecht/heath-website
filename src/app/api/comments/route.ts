@@ -214,15 +214,37 @@ export async function POST(req: Request) {
     })
     // Send notifications (best-effort)
     try {
-      // Email notification using Payload's configured email adapter if available
-      const notifyTo = (
-        process.env.COMMENT_NOTIFICATION_EMAILS ||
-        process.env.SMTP_FROM_ADDRESS ||
-        ''
-      )
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
+      // Build notification recipients: prefer all emails from the `users` collection
+      let notifyTo: string[] = []
+      try {
+        const usersRes = await (
+          payload as unknown as { find: (args: unknown) => Promise<{ docs?: unknown[] }> }
+        ).find({
+          collection: 'users',
+          where: { email: { exists: true } },
+          limit: 0,
+          depth: 0,
+          overrideAccess: false,
+        })
+        const docs = (usersRes && (usersRes as { docs?: unknown[] }).docs) || []
+        notifyTo = docs
+          .map((d) => (d as Record<string, unknown>).email)
+          .filter(Boolean)
+          .map((e) => String(e).trim())
+      } catch (e) {
+        console.error('Failed to fetch users for comment notifications', e)
+      }
+
+      // Fallback to env var or SMTP from address when no users found
+      if (!notifyTo.length) {
+        notifyTo = (
+          process.env.COMMENT_NOTIFICATION_EMAILS || process.env.SMTP_FROM_ADDRESS || ''
+        )
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      }
+
       if (
         notifyTo.length &&
         typeof (payload as unknown as Record<string, unknown>).sendEmail === 'function'
