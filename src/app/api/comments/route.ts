@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
+import { getServerSideURL } from '@/utilities/getURL'
 import configPromise from '@payload-config'
 
 export async function POST(req: Request) {
@@ -214,6 +215,22 @@ export async function POST(req: Request) {
     })
     // Send notifications (best-effort)
     try {
+      // Build a permalink to the poem (best-effort). We'll try to get the poem's slug or id.
+      let poemURL: string | null = null
+      try {
+        const poemForLink = await (
+          payload as unknown as { findByID: (args: unknown) => Promise<unknown> }
+        ).findByID({ collection: 'poems', id: resolvedPoemId, depth: 0, overrideAccess: false })
+        if (poemForLink) {
+          const slug = (poemForLink as Record<string, unknown>).slug
+          const server =
+            getServerSideURL() || process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:3000'
+          if (slug) poemURL = `${server}/poetry/${String(slug)}`
+          else poemURL = `${server}/poetry/${String(resolvedPoemId)}`
+        }
+      } catch (e) {
+        console.error('Failed to build poem permalink for notifications', e)
+      }
       // Build notification recipients: prefer all emails from the `users` collection
       let notifyTo: string[] = []
       try {
@@ -224,13 +241,17 @@ export async function POST(req: Request) {
           where: { email: { exists: true } },
           limit: 0,
           depth: 0,
-          overrideAccess: false,
+          // override access so the server can read all users regardless of collection access rules
+          overrideAccess: true,
         })
         const docs = (usersRes && (usersRes as { docs?: unknown[] }).docs) || []
         notifyTo = docs
           .map((d) => (d as Record<string, unknown>).email)
           .filter(Boolean)
           .map((e) => String(e).trim())
+        // Basic dedupe and validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        notifyTo = Array.from(new Set(notifyTo)).filter((e) => emailRegex.test(e))
       } catch (e) {
         console.error('Failed to fetch users for comment notifications', e)
       }
@@ -256,6 +277,7 @@ export async function POST(req: Request) {
             html: `<p>New comment on poem <strong>${String(lookupPoemId)}</strong></p>
                    <p><strong>${name || 'Anonymous'}</strong> (${email || 'no-email'})</p>
                    <p>${String(content).trim()}</p>
+                   ${poemURL ? `<p><a href="${poemURL}">View poem & comments</a></p>` : ''}
                    <p>Approve in the admin to publish.</p>`,
           })
         } catch (e) {
@@ -283,6 +305,52 @@ export async function POST(req: Request) {
           })
         } catch (e) {
           console.error('Failed to POST comment webhook', e)
+        }
+      }
+      // If this is a reply, notify the parent commenter directly if they provided an email
+      if (parentId) {
+        try {
+          const parentComment = await (
+            payload as unknown as { findByID: (args: unknown) => Promise<unknown> }
+          ).findByID({
+            collection: 'comments',
+            id: parentId,
+            depth: 0,
+            // server-side read
+            overrideAccess: true,
+          })
+          const parentEmail = parentComment
+            ? (parentComment as Record<string, unknown>).email
+            : null
+          if (parentEmail) {
+            const parentEmailTrim = String(parentEmail).trim()
+            const emailRegexLocal = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (emailRegexLocal.test(parentEmailTrim)) {
+              if (typeof (payload as unknown as Record<string, unknown>).sendEmail === 'function') {
+                try {
+                  // Build an anchor link to the created comment when possible
+                  const createdId = (created as unknown as Record<string, unknown>).id
+                  const anchor = createdId ? `#comment-${String(createdId)}` : ''
+                  const replyLink = poemURL ? `${poemURL}${anchor}` : undefined
+
+                  await (
+                    payload as unknown as { sendEmail: (opts: unknown) => Promise<unknown> }
+                  ).sendEmail({
+                    to: [parentEmailTrim],
+                    subject: `Reply to your comment on poem ${String(lookupPoemId)}`,
+                    html: `<p>Hi ${(parentComment as Record<string, unknown>).name || 'there'},</p>
+                          <p>Your comment on poem <strong>${String(lookupPoemId)}</strong> has received a reply:</p>
+                          <blockquote>${String(content).trim()}</blockquote>
+                          ${replyLink ? `<p><a href="${replyLink}">View the reply on the site</a></p>` : '<p>Visit the site to view the reply.</p>'}`,
+                  })
+                } catch (e) {
+                  console.error('Failed to send reply notification to parent commenter', e)
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch parent comment for reply notification', e)
         }
       }
     } catch (_notifyErr) {
