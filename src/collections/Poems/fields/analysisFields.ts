@@ -111,7 +111,7 @@ export const analysisFields: Field[] = [
           condition: (data, siblingData) => Boolean(siblingData?.enable),
         },
         validate: (value, { siblingData }) => {
-          if (siblingData?.enable && !value) {
+          if ((siblingData as { enable?: boolean } | undefined)?.enable && !value) {
             // Check if 'enable' is at the correct siblingData level
             return 'Analysis text is required when analysis is enabled.'
           }
